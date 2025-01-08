@@ -2,28 +2,16 @@ Office.onReady(() => {
     document.getElementById("addSignature").onclick = addSignature;
 });
 
-async function addSignature() {
-    const signatureHTML = `
-        <table style="font-family:Calibri, Arial; font-size:10pt;">
-            <tr>
-                <td>
-                    <b>Jan Kowalski</b><br />
-                    Stanowisko<br />
-                    <b>Email:</b> jan.kowalski@przyklad.pl<br />
-                    <b>Telefon:</b> 123-456-789
-                </td>
-            </tr>
-        </table>
-    `;
-
+function addSignature() {
+    const signature = "<p>Twoja stopka HTML</p>";
     Office.context.mailbox.item.body.setAsync(
-        signatureHTML,
+        signature,
         { coercionType: Office.CoercionType.Html },
         (result) => {
             if (result.status === Office.AsyncResultStatus.Succeeded) {
-                console.log("Stopka została dodana.");
+                console.log("Stopka dodana");
             } else {
-                console.error("Błąd podczas dodawania stopki:", result.error.message);
+                console.error("Błąd:", result.error.message);
             }
         }
     );
