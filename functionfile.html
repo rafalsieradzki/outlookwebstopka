@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Function File</title>
+  <!-- biblioteka Office.js -->
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script>
+    // Zdarzenie OnNewMessageCompose (nazwa funkcji zwykle handleNewMessageCompose)
+    function handleNewMessageCompose(event) {
+      // 1. Pobierz podstawowe dane usera z obiektu userProfile (Office.context.mailbox.userProfile)
+      const userProfile = Office.context.mailbox.userProfile;
+      const displayName = userProfile.displayName || "Imię i Nazwisko";
+      const emailAddress = userProfile.emailAddress || "adres@domena.com";
+
+      // 2. Jeśli chcesz statycznie wprowadzić stanowisko / telefony,
+      //    możesz to zrobić "na sztywno" lub z zewn. API (np. Graph).
+      const jobTitle = "Stanowisko Użytkownika";
+      const phone = "123 456 789";
+      const mobile = "987 654 321";
+
+      // 3. Zbuduj HTML stopki
+      const signatureHtml = `
+        <br><br>
+        <div style="font-family: Arial; font-size: 10pt;">
+          <strong>${displayName}</strong><br>
+          ${jobTitle}<br>
+          Tel: ${phone}, Kom: ${mobile}<br>
+          E-mail: <a href="mailto:${emailAddress}">${emailAddress}</a>
+        </div>
+        <br>
+      `;
+
+      // 4. Wstaw stopkę na początku (prependAsync) lub na końcu (appendAsync) ciała wiadomości
+      Office.context.mailbox.item.body.prependAsync(
+        signatureHtml,
+        { coercionType: Office.CoercionType.Html },
+        function (result) {
+          // Po wstawieniu stopki musimy powiadomić Outlook, że zakończyliśmy
+          event.completed();
+        }
+      );
+    }
+
+    // Office.initialize jest wywoływane, gdy biblioteka Office.js jest gotowa
+    Office.initialize = function () {
+      // Niektóre dokumentacje mówią, że wystarczy zdefiniować handleNewMessageCompose w global scope
+      // Ale czasem warto mieć pewność, że jest dostępne w momencie inicjalizacji.
+      // Najważniejsze: nazwa funkcji w manifeście i tu musi się zgadzać (OnNewMessageCompose -> handleNewMessageCompose).
+    };
+  </script>
+</head>
+<body>
+  <p>To jest plik functionFile dla Event-based Add-in (OnNewMessageCompose)</p>
+</body>
+</html>
