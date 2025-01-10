@@ -1,0 +1,60 @@
+{
+  "id": "beba23c4-3a7d-4c1c-97a5-11e1adcf3037",
+  "version": "1.0.0.0",
+  "providerName": "Familijna",
+  "name": {
+    "short": "DynamicFooterAddin",
+    "full": "Dynamic Footer Add-in for Outlook"
+  },
+  "description": {
+    "short": "Dynamic Footer for Outlook.",
+    "long": "This add-in allows automatic insertion of a dynamic footer into email messages based on user data."
+  },
+  "icons": {
+    "16": "assets/icon-16.png",
+    "32": "assets/icon-32.png",
+    "80": "assets/icon-80.png"
+  },
+  "accentColor": "#DF292F",
+  "hosts": [
+    "Mailbox"
+  ],
+  "permissions": [
+    "ReadWriteMailbox"
+  ],
+  "defaultSettings": {
+    "sourceLocation": "https://localhost:3000/taskpane.html"
+  },
+  "type": "TaskPaneApp",
+  "formSettings": {
+    "compose": {
+      "sourceLocation": "https://localhost:3000/taskpane.html",
+      "requestedHeight": 250
+    }
+  },
+  "extensions": [
+    {
+      "extensionPoint": "MessageComposeCommandSurface",
+      "type": "Button",
+      "id": "addFooterButton",
+      "label": "Add Footer",
+      "icon": "assets/icon-32.png",
+      "action": {
+        "type": "ExecuteFunction",
+        "functionName": "insertFooter"
+      }
+    }
+  ],
+  "requirements": {
+    "sets": [
+      {
+        "name": "Mailbox",
+        "version": "1.8"
+      }
+    ]
+  },
+  "webApplicationInfo": {
+    "id": "3143790b-b33c-4c83-b845-fff06a435a51",
+    "resource": "https://graph.microsoft.com"
+  }
+}
