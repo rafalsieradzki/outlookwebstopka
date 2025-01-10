@@ -1,60 +1,54 @@
-{
-  "id": "beba23c4-3a7d-4c1c-97a5-11e1adcf3037",
+﻿{
+  "manifestVersion": "1.1",
+  "id": "1686595f-f151-4c3c-90c5-dbb7874d9376",
   "version": "1.0.0.0",
-  "providerName": "Familijna",
+  "providerName": "Your Company",
+  "defaultLocale": "en-US",
   "name": {
-    "short": "DynamicFooterAddin",
-    "full": "Dynamic Footer Add-in for Outlook"
+    "short": "Outlook Add-in",
+    "full": "Outlook Add-in for GitHub Hosting"
   },
   "description": {
-    "short": "Dynamic Footer for Outlook.",
-    "long": "This add-in allows automatic insertion of a dynamic footer into email messages based on user data."
+    "short": "Add dynamic signatures to emails.",
+    "full": "This add-in allows you to add dynamic signatures to emails in Outlook."
   },
   "icons": {
-    "16": "assets/icon-16.png",
-    "32": "assets/icon-32.png",
-    "80": "assets/icon-80.png"
+    "16": "https://rafalsieradzki.github.io/outlookwebstopka/assets/icon-16.png",
+    "32": "https://rafalsieradzki.github.io/outlookwebstopka/assets/icon-32.png",
+    "80": "https://rafalsieradzki.github.io/outlookwebstopka/assets/icon-80.png"
   },
-  "accentColor": "#DF292F",
-  "hosts": [
-    "Mailbox"
-  ],
-  "permissions": [
-    "ReadWriteMailbox"
-  ],
+  "hosts": ["Mailbox"],
+  "permissions": ["ReadWriteMailbox"],
   "defaultSettings": {
-    "sourceLocation": "https://localhost:3000/taskpane.html"
-  },
-  "type": "TaskPaneApp",
-  "formSettings": {
-    "compose": {
-      "sourceLocation": "https://localhost:3000/taskpane.html",
-      "requestedHeight": 250
+    "sourceLocation": {
+      "default": "https://rafalsieradzki.github.io/outlookwebstopka/taskpane.html"
     }
   },
-  "extensions": [
-    {
-      "extensionPoint": "MessageComposeCommandSurface",
-      "type": "Button",
-      "id": "addFooterButton",
-      "label": "Add Footer",
-      "icon": "assets/icon-32.png",
-      "action": {
-        "type": "ExecuteFunction",
-        "functionName": "insertFooter"
-      }
-    }
-  ],
-  "requirements": {
-    "sets": [
+  "ribbon": {
+    "tabs": [
       {
-        "name": "Mailbox",
-        "version": "1.8"
+        "id": "msgComposeTab",
+        "label": "Custom Tab",
+        "groups": [
+          {
+            "id": "msgComposeGroup",
+            "label": "Signature Tools",
+            "controls": [
+              {
+                "id": "AddSignatureButton",
+                "type": "Button",
+                "label": "Add Signature",
+                "action": {
+                  "type": "ShowTaskpane",
+                  "sourceLocation": {
+                    "default": "https://rafalsieradzki.github.io/outlookwebstopka/taskpane.html"
+                  }
+                }
+              }
+            ]
+          }
+        ]
       }
     ]
-  },
-  "webApplicationInfo": {
-    "id": "3143790b-b33c-4c83-b845-fff06a435a51",
-    "resource": "https://graph.microsoft.com"
   }
 }
