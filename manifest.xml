@@ -20,11 +20,6 @@
     <Host Name="Mailbox"/>
   </Hosts>
 
-  <AppDomains>
-    <AppDomain>https://raw.githubusercontent.com</AppDomain>
-    <AppDomain>https://appsforoffice.microsoft.com</AppDomain>
-  </AppDomains>
-
   <Requirements>
     <Sets DefaultMinVersion="1.8">
       <Set Name="Mailbox"/>
