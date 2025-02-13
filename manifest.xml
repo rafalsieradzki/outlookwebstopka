@@ -20,31 +20,23 @@
     <Host Name="Mailbox"/>
   </Hosts>
 
+  <AppDomains>
+    <AppDomain>https://raw.githubusercontent.com</AppDomain>
+    <AppDomain>https://appsforoffice.microsoft.com</AppDomain>
+  </AppDomains>
+
   <Requirements>
     <Sets DefaultMinVersion="1.8">
       <Set Name="Mailbox"/>
     </Sets>
   </Requirements>
 
-  <!-- ✅ Poprawione FormSettings -->
-  <FormSettings>
-    <Form xsi:type="MessageRead">
-      <DesktopSettings>
-        <SourceLocation DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/insertSignature.html"/>
-        <RequestedHeight>250</RequestedHeight>
-      </DesktopSettings>
-    </Form>
-  </FormSettings>
-
-  <!-- ✅ Dodano Permissions -->
   <Permissions>ReadWriteItem</Permissions>
 
-  <!-- ✅ Poprawiony Rule -->
   <Rule xsi:type="Rule">
     <RuleCondition xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
   </Rule>
 
-  <!-- ✅ Naprawiono umiejscowienie VersionOverrides -->
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="ov:VersionOverridesV1_0">
     <Requirements>
       <bt:Sets DefaultMinVersion="1.8">
