@@ -1,69 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
-           xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.1"
-           xsi:type="MailApp">
+<OfficeApp 
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+  xsi:type="MailApp">
 
-  <Id>971E76EF-D73E-567F-ADAE-5A76B39052C8</Id>
+  <Id>b54b25f9-dc3c-4b6f-9ea7-86c8d1e4c5a2</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Familijna</ProviderName>
+  <ProviderName>Twoja Firma</ProviderName>
   <DefaultLocale>pl-PL</DefaultLocale>
-  <DisplayName DefaultValue="Dodatek Familijna - Stopka" />
-  <Description DefaultValue="Automatycznie dodaje testową stopkę do nowej wiadomości e-mail." />
+  <DisplayName DefaultValue="Dynamiczny Podpis Email"/>
+  <Description DefaultValue="Automatyczne wstawianie dynamicznego podpisu podczas komponowania wiadomości."/>
+  <IconUrl DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/128x128.png"/>
+  <HighResolutionIconUrl DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/128x128.png"/>
+  <SupportUrl DefaultValue="https://github.com/rafalsieradzki/outlookwebstopka/"/>
 
   <Hosts>
-    <Host Name="Mailbox" />
+    <Host Name="Mailbox"/>
   </Hosts>
 
   <Requirements>
-    <Sets>
-      <Set Name="Mailbox" MinVersion="1.13" />
+    <Sets DefaultMinVersion="1.8">
+      <Set Name="Mailbox"/>
     </Sets>
   </Requirements>
 
+  <!-- ✅ Poprawione FormSettings -->
+  <FormSettings>
+    <Form xsi:type="MessageRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/insertSignature.html"/>
+        <RequestedHeight>250</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+
+  <!-- ✅ Dodano Permissions -->
   <Permissions>ReadWriteItem</Permissions>
 
-  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
+  <!-- ✅ Poprawiony Rule -->
+  <Rule xsi:type="Rule">
+    <RuleCondition xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+  </Rule>
+
+  <!-- ✅ Naprawiono umiejscowienie VersionOverrides -->
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="ov:VersionOverridesV1_0">
     <Requirements>
-      <bt:Sets DefaultMinVersion="1.13">
-        <bt:Set Name="Mailbox" />
+      <bt:Sets DefaultMinVersion="1.8">
+        <bt:Set Name="Mailbox"/>
       </bt:Sets>
     </Requirements>
     <Hosts>
       <Host xsi:type="MailHost">
         <DesktopFormFactor>
-          <FunctionFile resid="functionFile" />
-          <ExtensionPoint xsi:type="MessageCompose">
+          <FunctionFile resid="functionFileUrl"/>
+          <ExtensionPoint xsi:type="LaunchEvent">
             <LaunchEvents>
-              <LaunchEvent Type="OnNewMessageCompose" FunctionName="addSignature">
-                <Rule xsi:type="RuleCollection" Mode="Or">
-                  <Rule xsi:type="ItemIs" ItemType="Message" FormType="Edit" />
-                </Rule>
-              </LaunchEvent>
+              <LaunchEvent Type="OnNewMessageCompose" FunctionName="insertSignature"/>
             </LaunchEvents>
-            <Action xsi:type="ShowTaskpane">
-              <SourceLocation resid="functionFile" />
-              <Title resid="groupLabel" />
-            </Action>
+          </ExtensionPoint>
+          <ExtensionPoint xsi:type="MessageReadCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="myDummyGroup">
+                <Label resid="dummyGroupLabel"/>
+                <Control xsi:type="Button" id="dummyButton">
+                  <Label resid="dummyButtonLabel"/>
+                  <Supertip>
+                    <Title resid="dummyButtonTitle"/>
+                    <Description resid="dummyButtonDescription"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="icon16"/>
+                    <bt:Image size="32" resid="icon32"/>
+                    <bt:Image size="80" resid="icon80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="dummyTaskpaneUrl"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
           </ExtensionPoint>
         </DesktopFormFactor>
       </Host>
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="icon32" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/32x32.png" />
-        <bt:Image id="icon128" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/128x128.png" />
+        <bt:Image id="icon16" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/32x32.png"/>
+        <bt:Image id="icon32" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/32x32.png"/>
+        <bt:Image id="icon80" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/128x128.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="functionFile" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/functionFile.html" />
+        <bt:Url id="functionFileUrl" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/insertSignature.html"/>
+        <bt:Url id="dummyTaskpaneUrl" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/insertSignature.html"/>
       </bt:Urls>
-      <bt:ShortStrings>
-        <bt:String id="groupLabel" DefaultValue="Dodatek Familijna" />
-      </bt:ShortStrings>
-      <bt:LongStrings>
-        <bt:String id="taskPaneButtonDescription" DefaultValue="Dodaje automatycznie testową stopkę do wiadomości." />
-      </bt:LongStrings>
+      <bt:Strings>
+        <bt:String id="dummyGroupLabel" DefaultValue="Dummy Group"/>
+        <bt:String id="dummyButtonLabel" DefaultValue="Dummy Button"/>
+        <bt:String id="dummyButtonTitle" DefaultValue="Dummy Button Title"/>
+        <bt:String id="dummyButtonDescription" DefaultValue="Przykładowy przycisk do spełnienia wymagań SourceLocation"/>
+      </bt:Strings>
     </Resources>
   </VersionOverrides>
 </OfficeApp>

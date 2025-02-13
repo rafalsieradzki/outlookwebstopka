@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Insert Signature Function</title>
+    <!-- Ładowanie biblioteki Office.js -->
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <script>
+      // Funkcja wywoływana przy inicjalizacji add-inu
+      Office.initialize = function(reason) {
+          // Gotowość Office
+      };
+
+      // Funkcja, która wstawia podpis – wywoływana przez zdarzenie OnNewMessageCompose
+      function insertSignature(event) {
+          // Szablon podpisu – dokładnie taki, jaki przesłałeś
+          var signatureTemplate = `
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+
+<table cellpadding="0" cellspacing="0" border="0" style="max-width:600px;font-family:Calibri, Arial;">
+    <tr>
+        <td style="margin:auto;" align="center" >
+            <img src="https://www.familijna.pl/uploads/drive/familijna_logotyp.png" width="80%" alt="GRUPA FAMILIJNA"  />
+        </td>
+        <td style="font-size:9pt;line-height:140%;color:#595959;border-left:3px solid #DF292F;padding-left:15px;">
+            <span style="font-size:14pt;color:#DF292F;">%%DisplayName%%</span>
+            <br />
+            <span>%%Title%%</span>
+            <br /><br />
+            <a href="https://familijna.pl" style="color:#595959;text-decoration: none;"><span style="color:#DF292F;">www.</span>familijna.pl</a> <span style="color:#DF292F;">email:</span> <a href="mailto:%%Email%%" style="color:#595959;text-decoration: none;">%%Email%%</a>
+            <br />
+            <span style="color:#DF292F;">tel.</span> %%PhoneNumber%% <span style="color:#DF292F;">kom.</span> %%MobileNumber%%
+            <div style="padding-top:25px;">
+                <a href="https://www.facebook.com/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/fb.png" height="25" width="25" alt="facebook" style="margin-right:5px;" /></a>&nbsp;
+                <a href="https://www.instagram.com/familijna/" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/ig.png" height="25" width="25" alt="instagram" style="margin-right:5px;" /></a>&nbsp;
+                <a href="https://m.me/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/ms.png" height="25" width="25" alt="messenger"  style="margin-right:5px;" /></a>&nbsp;
+                <a href="https://goo.gl/maps/kpEMXw6deUcjidot9" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/gm.png" height="25" width="25" alt="google maps" style="margin-right:5px;" /></a>&nbsp;
+ <a href="https://www.youtube.com/@familijna1631/featured" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/yt.png" height="25" width="25" alt="youtube" style="margin-right:5px;" /></a>&nbsp;               
+ <a href="https://www.linkedin.com/company/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/in.png" height="25" width="25" alt="linkedin" style="margin-right:5px;" /></a>&nbsp;
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" style="padding-top:5px;font-size:7pt;line-height:105%;color:#595959;">
+            <p><span style="color:#DF292F;">GRUPA FAMILIJNA</span> Spółka z ograniczoną odpowiedzialnością, Kuźnica Czeszycka 11, 56-320 Krośnice, tel. 71 384 56 13,<br />
+                NIP: 9161351695, REGON: 020182505, BDO: 000084673.</p>
+            <p>Informacja dla odbiorcy: Informacje zawarte w niniejszym email-u oraz załącznikach do niego mają charakter poufny, są przeznaczone wyłącznie dla wskazanych adresatów. Jeśli nie jesteś adresatem tego email-a, prosimy niezwłocznie o jego skasowanie oraz poinformowanie nadawcy. Wykonywanie kopii, dystrybucja lub używanie do innych celów niniejszego email-a jest zabronione. Firma Grupa FAMILIJNA Sp. z o.o. nie ponosi żadnej odpowiedzialności za zmiany email-a dokonane po jego wysłaniu. <br />Informujemy, że Pana/Pani dane są zbierane i przetwarzane w celu ułatwienia nawiązywania korespondencji/kontaktu. Administratorem danych jest Grupa FAMILIJNA Sp. z o.o. z siedzibą w Kuźnicy Czeszyckiej 11. Podanie danych jest dobrowolne. Dane są przetwarzane na podstawie prawnie usprawiedliwionego celu administratora danych. Ma Pan/Pani prawo wglądu w swoje dane oraz ich poprawienia, a także prawo żądania zaprzestania przetwarzania swoich danych.</p>        
+        </td>
+    </tr>
+</table>
+</body>
+</html>
+          `;
+
+          // Pobranie danych użytkownika – przykładowo z Office (w praktyce można rozszerzyć o wywołanie API)
+          var displayName = Office.context.mailbox.userProfile.displayName || "Jan Kowalski";
+          var email = Office.context.mailbox.userProfile.emailAddress || "jan.kowalski@example.com";
+          var title = "Stanowisko";         // Możesz zastąpić logiką pobierania z innego źródła
+          var phoneNumber = "123-456-789";    // Przykładowa wartość
+          var mobileNumber = "987-654-321";   // Przykładowa wartość
+
+          // Podmiana tokenów w szablonie
+          var signatureHtml = signatureTemplate.replace(/%%DisplayName%%/g, displayName)
+                                               .replace(/%%Email%%/g, email)
+                                               .replace(/%%Title%%/g, title)
+                                               .replace(/%%PhoneNumber%%/g, phoneNumber)
+                                               .replace(/%%MobileNumber%%/g, mobileNumber);
+
+          // Pobieramy aktualną zawartość wiadomości (w formacie HTML) i dołączamy podpis na końcu
+          Office.context.mailbox.item.body.getAsync("html", function(getResult) {
+              if (getResult.status === Office.AsyncResultStatus.Succeeded) {
+                  var currentBody = getResult.value;
+                  var newBody = currentBody + signatureHtml;
+                  Office.context.mailbox.item.body.setAsync(newBody, { coercionType: "html" }, function(setResult) {
+                      // Kończymy zdarzenie – informujemy system, że funkcja zakończyła działanie
+                      event.completed();
+                  });
+              } else {
+                  event.completed();
+              }
+          });
+      }
+
+      // Rejestracja funkcji pod kluczem "insertSignature", aby była dostępna dla event-based activation
+      if (typeof Office !== "undefined") {
+          Office.actions.associate("insertSignature", insertSignature);
+      }
+    </script>
+</head>
+<body>
+    <h3>Insert Signature Function</h3>
+    <p>Ten plik służy jako funkcja dla event-based activation add-inu.</p>
+</body>
+</html>
