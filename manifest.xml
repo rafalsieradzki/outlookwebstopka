@@ -1,144 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<OfficeApp 
-    xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
-    xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
-    xsi:type="MailApp">
-  
-  <!-- Unikalny GUID -->
-  <Id>b54b25f9-dc3c-4b6f-9ea7-86c8d1e4c5a2</Id>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.1"
+           xsi:type="MailApp">
 
+  <Id>971E76EF-D73E-567F-ADAE-5A76B39052C8</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Twoja Firma</ProviderName>
+  <ProviderName>Familijna</ProviderName>
   <DefaultLocale>pl-PL</DefaultLocale>
-  <DisplayName DefaultValue="Dynamiczny Podpis Email" />
-  <Description DefaultValue="Automatyczne wstawianie dynamicznego podpisu podczas komponowania wiadomości." />
-  
-  <!-- Domyślna ikona (np. 128x128) -->
-  <IconUrl DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/128x128.png" />
-  <SupportUrl DefaultValue="https://github.com/rafalsieradzki/outlookwebstopka/" />
-  
+  <DisplayName DefaultValue="Dodatek Familijna - Stopka" />
+  <Description DefaultValue="Automatycznie dodaje testową stopkę do nowej wiadomości e-mail." />
+
   <Hosts>
-    <Host Name="Mailbox"/>
+    <Host Name="Mailbox" />
   </Hosts>
 
-  <!-- Dodatek wymaga co najmniej Mailbox 1.8 (aby obsłużyć event-based add-ins) -->
   <Requirements>
-    <Sets DefaultMinVersion="1.8">
-      <Set Name="Mailbox" />
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.13" />
     </Sets>
   </Requirements>
 
-  <!-- Uprawnienia do zapisu/odczytu zawartości wiadomości -->
   <Permissions>ReadWriteItem</Permissions>
 
-  <VersionOverrides
-      xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
-      xsi:type="MailAppVersionOverrides">
-
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
     <Requirements>
-      <bt:Sets DefaultMinVersion="1.8">
+      <bt:Sets DefaultMinVersion="1.13">
         <bt:Set Name="Mailbox" />
       </bt:Sets>
     </Requirements>
-
     <Hosts>
       <Host xsi:type="MailHost">
         <DesktopFormFactor>
-
-          <!-- 
-            1) Nasz plik funkcyjny, który obsługuje event-based OnNewMessageCompose.
-            2) Musi być zdefiniowany w <Resources> i mieć unikalny "resid". 
-          -->
-          <FunctionFile resid="functionFileUrl"/>
-
-          <!-- 
-            Event-based add-in: uruchamia insertSignature przy tworzeniu nowej wiadomości 
-          -->
-          <ExtensionPoint xsi:type="LaunchEvent">
+          <FunctionFile resid="functionFile" />
+          <ExtensionPoint xsi:type="MessageCompose">
             <LaunchEvents>
-              <LaunchEvent Type="OnNewMessageCompose" FunctionName="insertSignature" />
+              <LaunchEvent Type="OnNewMessageCompose" FunctionName="addSignature">
+                <Rule xsi:type="RuleCollection" Mode="Or">
+                  <Rule xsi:type="ItemIs" ItemType="Message" FormType="Edit" />
+                </Rule>
+              </LaunchEvent>
             </LaunchEvents>
+            <Action xsi:type="ShowTaskpane">
+              <SourceLocation resid="functionFile" />
+              <Title resid="groupLabel" />
+            </Action>
           </ExtensionPoint>
-
-          <!-- 
-            DUMMY ExtensionPoint: minimalny przycisk w widoku MessageRead, 
-            który zapewnia "SourceLocation" i pozwala przejść walidację 
-          -->
-          <ExtensionPoint xsi:type="MessageReadCommandSurface">
-            <OfficeTab id="TabDefault">
-              <Group id="myDummyGroup">
-                <Label resid="dummyGroupLabel" />
-                <Control xsi:type="Button" id="dummyButton">
-                  <Label resid="dummyButtonLabel" />
-                  <Supertip>
-                    <Title resid="dummyButtonTitle" />
-                    <Description resid="dummyButtonDescription" />
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="icon16" />
-                    <bt:Image size="32" resid="icon32" />
-                    <bt:Image size="80" resid="icon80" />
-                  </Icon>
-                  <Action xsi:type="ShowTaskpane">
-                    <!-- 
-                      SourceLocation – MUSI być poprawny URL do pliku HTML, 
-                      nawet jeśli to panel, którego nie planujesz używać 
-                    -->
-                    <SourceLocation resid="dummyTaskPaneUrl" />
-                  </Action>
-                </Control>
-              </Group>
-            </OfficeTab>
-          </ExtensionPoint>
-
         </DesktopFormFactor>
-
-        <!-- Analogiczne sekcje dla TabletFormFactor i MobileFormFactor, jeśli chcesz -->
-        <TabletFormFactor>
-          <FunctionFile resid="functionFileUrl"/>
-          <ExtensionPoint xsi:type="LaunchEvent">
-            <LaunchEvents>
-              <LaunchEvent Type="OnNewMessageCompose" FunctionName="insertSignature" />
-            </LaunchEvents>
-          </ExtensionPoint>
-          <!-- Dodaj tu także DUMMY ExtensionPoint (opcjonalnie, jeśli chcesz obsłużyć tablety) -->
-        </TabletFormFactor>
-
-        <MobileFormFactor>
-          <FunctionFile resid="functionFileUrl"/>
-          <ExtensionPoint xsi:type="LaunchEvent">
-            <LaunchEvents>
-              <LaunchEvent Type="OnNewMessageCompose" FunctionName="insertSignature" />
-            </LaunchEvents>
-          </ExtensionPoint>
-          <!-- Dodaj tu także DUMMY ExtensionPoint (opcjonalnie, jeśli chcesz obsłużyć mobile) -->
-        </MobileFormFactor>
       </Host>
     </Hosts>
-
-    <!-- Zasoby: URL-e i Stringi -->
     <Resources>
       <bt:Images>
-        <bt:Image id="icon16" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/32x32.png" />
         <bt:Image id="icon32" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/32x32.png" />
-        <bt:Image id="icon80" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/128x128.png" />
+        <bt:Image id="icon128" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/128x128.png" />
       </bt:Images>
       <bt:Urls>
-        <!-- Plik, w którym mamy logikę insertSignature (event-based) -->
-        <bt:Url id="functionFileUrl" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/insertSignature.html" />
-        
-        <!-- Dummy panel, wymagany przez walidację. Może to być ta sama strona lub inny plik HTML -->
-        <bt:Url id="dummyTaskPaneUrl" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/insertSignature.html" />
+        <bt:Url id="functionFile" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/functionFile.html" />
       </bt:Urls>
-      <bt:Strings>
-        <bt:String id="dummyGroupLabel" DefaultValue="Dummy Group" />
-        <bt:String id="dummyButtonLabel" DefaultValue="Dummy Button" />
-        <bt:String id="dummyButtonTitle" DefaultValue="Dummy Button Title" />
-        <bt:String id="dummyButtonDescription" DefaultValue="Przykładowy przycisk do spełnienia wymagań SourceLocation" />
-      </bt:Strings>
+      <bt:ShortStrings>
+        <bt:String id="groupLabel" DefaultValue="Dodatek Familijna" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="taskPaneButtonDescription" DefaultValue="Dodaje automatycznie testową stopkę do wiadomości." />
+      </bt:LongStrings>
     </Resources>
-
   </VersionOverrides>
 </OfficeApp>

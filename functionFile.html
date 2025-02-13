@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Function File</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <script>
+        Office.onReady(() => {
+            console.log("Office.js got loaded successfully.");
+        });
+
+        function addSignature(event) {
+            const signature = "<p>To jest stopka testowa z Add-in.</p>";
+            Office.context.mailbox.item.body.setAsync(
+                signature,
+                { coercionType: "html" },
+                (result) => {
+                    if (result.status === Office.AsyncResultStatus.Succeeded) {
+                        console.log("Stopka została dodana.");
+                    } else {
+                        console.error("Błąd dodawania stopki:", result.error.message);
+                    }
+                }
+            );
+            event.completed();
+        }
+    </script>
+</head>
+<body>
+</body>
+</html>
