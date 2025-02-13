@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp 
+    xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+    xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+    xsi:type="MailApp">
+  <Id>b54b25f9-dc3c-4b6f-9ea7-86c8d1e4c5a2</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Familijna</ProviderName>
+  <DefaultLocale>pl-PL</DefaultLocale>
+  <DisplayName DefaultValue="Dynamiczny Podpis Email" />
+  <Description DefaultValue="Automatyczne wstawianie dynamicznego podpisu podczas tworzenia wiadomości." />
+  <IconUrl DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/128x128.png" />
+  <SupportUrl DefaultValue="https://github.com/rafalsieradzki/outlookwebstopka/" />
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.8">
+      <Set Name="Mailbox" />
+    </Sets>
+  </Requirements>
+  <Permissions>ReadWriteItem</Permissions>
+  <VersionOverrides
+      xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+      xsi:type="MailAppVersionOverrides">
+    <Requirements>
+      <bt:Sets DefaultMinVersion="1.8">
+        <bt:Set Name="Mailbox" />
+      </bt:Sets>
+    </Requirements>
+    <Hosts>
+      <Host xsi:type="MailHost">
+        <DesktopFormFactor>
+          <FunctionFile resid="functionFileUrl"/>
+          <ExtensionPoint xsi:type="LaunchEvent">
+            <LaunchEvents>
+              <LaunchEvent Type="OnNewMessageCompose" FunctionName="insertSignature" />
+            </LaunchEvents>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+        <TabletFormFactor>
+          <FunctionFile resid="functionFileUrl"/>
+          <ExtensionPoint xsi:type="LaunchEvent">
+            <LaunchEvents>
+              <LaunchEvent Type="OnNewMessageCompose" FunctionName="insertSignature" />
+            </LaunchEvents>
+          </ExtensionPoint>
+        </TabletFormFactor>
+        <MobileFormFactor>
+          <FunctionFile resid="functionFileUrl"/>
+          <ExtensionPoint xsi:type="LaunchEvent">
+            <LaunchEvents>
+              <LaunchEvent Type="OnNewMessageCompose" FunctionName="insertSignature" />
+            </LaunchEvents>
+          </ExtensionPoint>
+        </MobileFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="icon16" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/32x32.png" />
+        <bt:Image id="icon32" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/32x32.png" />
+        <bt:Image id="icon80" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/128x128.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="functionFileUrl" DefaultValue="https://raw.githubusercontent.com/rafalsieradzki/outlookwebstopka/main/insertSignature.html"/>
+      </bt:Urls>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
