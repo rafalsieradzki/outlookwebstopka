@@ -1,100 +1,7 @@
-// Stopka Familijna - taskpane.js
-const AUTH_URL = "https://rafalsieradzki.github.io/outlookwebstopka/auth.html";
-const GRAPH_ME_URL = "https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,jobTitle,businessPhones,mobilePhone,department,officeLocation,companyName";
+// Stopka Familijna - event.js
 const STORAGE_AUTO_KEY = "autoSignatureEnabled";
 const STORAGE_PROFILE_KEY = "signatureUserProfile";
-let authDialog = null;
-
-Office.onReady(async function () {
-  const button = document.getElementById("insertSignature");
-  if (button) button.onclick = insertSignatureManual;
-  const checkbox = document.getElementById("autoSignatureEnabled");
-  if (checkbox) {
-    const enabled = await getStorageItem(STORAGE_AUTO_KEY);
-    checkbox.checked = enabled === "true";
-    checkbox.onchange = onAutoSignatureChanged;
-  }
-  setStatus("Dodatek gotowy.", false, true);
-});
-
-function setStatus(message, isError, isOk) {
-  const status = document.getElementById("status");
-  if (!status) return;
-  status.textContent = message || "";
-  status.className = "";
-  if (isError) status.className = "error";
-  if (isOk) status.className = "ok";
-}
-function setButtonBusy(isBusy) {
-  const button = document.getElementById("insertSignature");
-  if (!button) return;
-  button.disabled = isBusy;
-  button.textContent = isBusy ? "Pobieram dane..." : "Wstaw stopkę teraz";
-}
-function getStorageItem(key) {
-  return OfficeRuntime.storage.getItem(key).catch(function() { return null; });
-}
-function setStorageItem(key, value) { return OfficeRuntime.storage.setItem(key, value); }
-
-async function onAutoSignatureChanged() {
-  const checkbox = document.getElementById("autoSignatureEnabled");
-  const enabled = checkbox && checkbox.checked;
-  try {
-    await setStorageItem(STORAGE_AUTO_KEY, enabled ? "true" : "false");
-    if (enabled) {
-      setStatus("Pobieram dane użytkownika do automatu...", false, false);
-      const accessToken = await getAccessTokenWithDialog();
-      const user = await getGraphUser(accessToken);
-      await setStorageItem(STORAGE_PROFILE_KEY, JSON.stringify(user));
-      setStatus("Automatyczne dodawanie stopki jest włączone.", false, true);
-    } else {
-      setStatus("Automatyczne dodawanie stopki jest wyłączone.", false, true);
-    }
-  } catch (e) {
-    if (checkbox) checkbox.checked = false;
-    await setStorageItem(STORAGE_AUTO_KEY, "false");
-    const message = e && e.message ? e.message : String(e);
-    setStatus("Nie udało się włączyć automatu:\n" + message, true, false);
-  }
-}
-
-function getAccessTokenWithDialog() {
-  return new Promise(function (resolve, reject) {
-    setStatus("Otwieram logowanie Microsoft 365...", false, false);
-    Office.context.ui.displayDialogAsync(AUTH_URL, { height: 65, width: 45, displayInIframe: false, promptBeforeOpen: false }, function (asyncResult) {
-      if (asyncResult.status !== Office.AsyncResultStatus.Succeeded) {
-        reject(new Error("Nie udało się otworzyć okna logowania: " + asyncResult.error.message));
-        return;
-      }
-      authDialog = asyncResult.value;
-      authDialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
-        try {
-          const message = JSON.parse(arg.message);
-          if (message.status === "success" && message.accessToken) {
-            authDialog.close(); authDialog = null; resolve(message.accessToken); return;
-          }
-          if (message.status === "error") {
-            authDialog.close(); authDialog = null; reject(new Error(message.message || "Błąd logowania.")); return;
-          }
-          reject(new Error("Nieznana odpowiedź z okna logowania."));
-        } catch (e) {
-          if (authDialog) { authDialog.close(); authDialog = null; }
-          reject(e);
-        }
-      });
-    });
-  });
-}
-
-async function getGraphUser(accessToken) {
-  setStatus("Pobieram dane użytkownika z Microsoft Graph...", false, false);
-  const response = await fetch(GRAPH_ME_URL, { headers: { Authorization: "Bearer " + accessToken } });
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error("Graph API: " + response.status + " " + errorText);
-  }
-  return await response.json();
-}
+const SIGNATURE_MARKER = 'data-familijna-signature="1"';
 
 function replaceAllSafe(text, token, value) { return text.split(token).join(value || ""); }
 function firstBusinessPhone(user) { return user && user.businessPhones && user.businessPhones.length > 0 ? (user.businessPhones[0] || "") : ""; }
@@ -129,27 +36,31 @@ function buildSignatureHtml(user) {
   return '<div data-familijna-signature="1">' + html + '</div>';
 }
 
-async function insertSignatureManual() {
-  setButtonBusy(true);
-  setStatus("Start...", false, false);
+function getStorageItemSafe(key) {
+  return OfficeRuntime.storage.getItem(key).catch(function() { return null; });
+}
+function onNewMessageComposeHandler(event) {
+  autoInsertSignature(event);
+}
+async function autoInsertSignature(event) {
   try {
-    const accessToken = await getAccessTokenWithDialog();
-    const user = await getGraphUser(accessToken);
-    await setStorageItem(STORAGE_PROFILE_KEY, JSON.stringify(user));
-    const html = buildSignatureHtml(user);
-    setStatus("Wstawiam stopkę do wiadomości...", false, false);
-    Office.context.mailbox.item.body.setSelectedDataAsync("<br><br>" + html, { coercionType: Office.CoercionType.Html }, function (result) {
-      setButtonBusy(false);
-      if (result.status === Office.AsyncResultStatus.Succeeded) {
-        setStatus("Stopka została wstawiona.", false, true);
-      } else {
-        const msg = result.error && result.error.message ? result.error.message : "Nieznany błąd Outlook API.";
-        setStatus("Nie udało się wstawić stopki: " + msg, true, false);
-      }
+    const enabled = await getStorageItemSafe(STORAGE_AUTO_KEY);
+    if (enabled !== "true") { event.completed(); return; }
+    const profileJson = await getStorageItemSafe(STORAGE_PROFILE_KEY);
+    let user = null;
+    if (profileJson) { try { user = JSON.parse(profileJson); } catch (e) { user = null; } }
+    const signatureHtml = buildSignatureHtml(user);
+    Office.context.mailbox.item.body.getAsync(Office.CoercionType.Html, { asyncContext: event }, function(getResult) {
+      if (getResult.status !== Office.AsyncResultStatus.Succeeded) { getResult.asyncContext.completed(); return; }
+      const currentBody = getResult.value || "";
+      if (currentBody.indexOf(SIGNATURE_MARKER) !== -1) { getResult.asyncContext.completed(); return; }
+      const newBody = currentBody + "<br><br>" + signatureHtml;
+      Office.context.mailbox.item.body.setAsync(newBody, { coercionType: Office.CoercionType.Html, asyncContext: getResult.asyncContext }, function(setResult) {
+        setResult.asyncContext.completed();
+      });
     });
   } catch (e) {
-    setButtonBusy(false);
-    const message = e && e.message ? e.message : String(e);
-    setStatus("Nie udało się pobrać danych użytkownika:\n" + message, true, false);
+    try { event.completed(); } catch (_) {}
   }
 }
+Office.actions.associate("onNewMessageComposeHandler", onNewMessageComposeHandler);

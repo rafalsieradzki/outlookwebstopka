@@ -3,67 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <title>Stopka Familijna</title>
-
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="taskpane.js"></script>
-
   <style>
-    body {
-      font-family: Segoe UI, Arial, sans-serif;
-      padding: 16px;
-      margin: 0;
-    }
-
-    h2 {
-      margin-top: 0;
-      font-size: 22px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 15px;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      cursor: default;
-      opacity: 0.6;
-    }
-
-    .hint {
-      color: #666;
-      font-size: 12px;
-      margin-top: 12px;
-      line-height: 1.4;
-    }
-
-    #status {
-      margin-top: 14px;
-      font-size: 12px;
-      line-height: 1.4;
-      color: #444;
-      white-space: pre-wrap;
-    }
-
-    #status.error {
-      color: #b00020;
-    }
-
-    #status.ok {
-      color: #107c10;
-    }
+    body { font-family: Segoe UI, Arial, sans-serif; padding: 16px; margin: 0; }
+    h2 { margin-top: 0; font-size: 22px; }
+    button { width: 100%; padding: 12px; font-size: 15px; cursor: pointer; margin-top: 12px; }
+    button:disabled { cursor: default; opacity: 0.6; }
+    .option { display: flex; gap: 8px; align-items: flex-start; margin: 16px 0 10px 0; font-size: 14px; line-height: 1.35; }
+    .option input { margin-top: 3px; }
+    .hint { color: #666; font-size: 12px; margin-top: 12px; line-height: 1.4; }
+    #status { margin-top: 14px; font-size: 12px; line-height: 1.4; color: #444; white-space: pre-wrap; }
+    #status.error { color: #b00020; }
+    #status.ok { color: #107c10; }
   </style>
 </head>
 <body>
   <h2>Stopka Familijna</h2>
-
-  <button id="insertSignature">Wstaw stopkę</button>
-
-  <p class="hint">
-    Stopka zostanie wstawiona w miejscu kursora w treści wiadomości.
-  </p>
-
+  <label class="option"><input type="checkbox" id="autoSignatureEnabled" /><span>Dodawaj stopkę automatycznie do nowych wiadomości</span></label>
+  <button id="insertSignature">Wstaw stopkę teraz</button>
+  <p class="hint">Po zaznaczeniu checkboxa dodatek zapisze dane użytkownika i będzie automatycznie dodawać stopkę przy tworzeniu wiadomości.</p>
   <div id="status"></div>
 </body>
 </html>
