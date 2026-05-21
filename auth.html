@@ -2,9 +2,105 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>Logowanie</title>
+  <title>Logowanie Microsoft 365</title>
+
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="msal-browser.min.js"></script>
+
+  <style>
+    body {
+      font-family: Segoe UI, Arial, sans-serif;
+      padding: 20px;
+    }
+    #status {
+      white-space: pre-wrap;
+      font-size: 13px;
+    }
+    .error {
+      color: #b00020;
+    }
+  </style>
 </head>
 <body>
-  <p>Logowanie zakończone. Możesz zamknąć to okno.</p>
+  <h3>Logowanie Microsoft 365</h3>
+  <div id="status">Trwa logowanie...</div>
+
+  <script>
+    const CLIENT_ID = "4fbbe7eb-2819-4e83-be4d-6a96aa593088";
+    const TENANT_ID = "c906d678-a366-4a55-8042-625ef63569d1";
+    const REDIRECT_URI = "https://rafalsieradzki.github.io/outlookwebstopka/auth.html";
+    const GRAPH_SCOPES = ["User.Read", "User.ReadBasic.All"];
+
+    function setStatus(message, isError) {
+      const el = document.getElementById("status");
+      el.textContent = message || "";
+      el.className = isError ? "error" : "";
+    }
+
+    function sendMessage(message) {
+      if (window.Office && Office.context && Office.context.ui) {
+        Office.context.ui.messageParent(JSON.stringify(message));
+      } else {
+        setStatus("Nie można przekazać wyniku logowania do dodatku Outlook.", true);
+      }
+    }
+
+    Office.onReady(async function () {
+      try {
+        if (typeof msal === "undefined") {
+          throw new Error("Brak biblioteki MSAL. Sprawdź plik msal-browser.min.js.");
+        }
+
+        const msalInstance = new msal.PublicClientApplication({
+          auth: {
+            clientId: CLIENT_ID,
+            authority: "https://login.microsoftonline.com/" + TENANT_ID,
+            redirectUri: REDIRECT_URI
+          },
+          cache: {
+            cacheLocation: "localStorage",
+            storeAuthStateInCookie: false
+          }
+        });
+
+        await msalInstance.initialize();
+
+        const redirectResult = await msalInstance.handleRedirectPromise();
+
+        if (redirectResult && redirectResult.account && redirectResult.accessToken) {
+          msalInstance.setActiveAccount(redirectResult.account);
+          sendMessage({ status: "success", accessToken: redirectResult.accessToken });
+          return;
+        }
+
+        const accounts = msalInstance.getAllAccounts();
+
+        if (accounts.length > 0) {
+          const account = msalInstance.getActiveAccount() || accounts[0];
+
+          try {
+            const tokenResult = await msalInstance.acquireTokenSilent({
+              scopes: GRAPH_SCOPES,
+              account: account
+            });
+
+            sendMessage({ status: "success", accessToken: tokenResult.accessToken });
+            return;
+          } catch (silentError) {
+            console.warn("Silent token failed, redirecting...", silentError);
+          }
+        }
+
+        setStatus("Przekierowanie do logowania Microsoft...");
+        await msalInstance.loginRedirect({
+          scopes: GRAPH_SCOPES
+        });
+      } catch (e) {
+        const message = e && e.message ? e.message : String(e);
+        setStatus("Błąd logowania:\n" + message, true);
+        sendMessage({ status: "error", message: message });
+      }
+    });
+  </script>
 </body>
 </html>

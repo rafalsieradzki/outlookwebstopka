@@ -1,12 +1,12 @@
 // Stopka Familijna - taskpane.js
-// Poprawka: MSAL initialize() dla nowszych wersji @azure/msal-browser.
+// Poprawna wersja: uwierzytelnianie przez Office Dialog API.
+// Panel otwiera auth.html, auth.html zwraca access token przez Office.context.ui.messageParent().
 
-const CLIENT_ID = "4fbbe7eb-2819-4e83-be4d-6a96aa593088";
-const REDIRECT_URI = "https://rafalsieradzki.github.io/outlookwebstopka/auth.html";
-const GRAPH_SCOPES = ["User.Read", "User.ReadBasic.All"];
+const AUTH_URL = "https://rafalsieradzki.github.io/outlookwebstopka/auth.html";
+const GRAPH_ME_URL =
+  "https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,jobTitle,businessPhones,mobilePhone,department,officeLocation,companyName";
 
-let msalApp = null;
-let msalInitialized = false;
+let authDialog = null;
 
 Office.onReady(function () {
   const button = document.getElementById("insertSignature");
@@ -36,99 +36,79 @@ function setButtonBusy(isBusy) {
   button.textContent = isBusy ? "Pobieram dane..." : "Wstaw stopkę";
 }
 
-async function getMsalApp() {
-  if (typeof msal === "undefined") {
-    throw new Error("Biblioteka MSAL nie została załadowana. Sprawdź plik msal-browser.min.js.");
-  }
+function getAccessTokenWithDialog() {
+  return new Promise(function (resolve, reject) {
+    setStatus("Otwieram logowanie Microsoft 365...", false, false);
 
-  if (!msalApp) {
-    msalApp = new msal.PublicClientApplication({
-      auth: {
-        clientId: CLIENT_ID,
-        authority: "https://login.microsoftonline.com/c906d678-a366-4a55-8042-625ef63569d1",
-        redirectUri: REDIRECT_URI
+    Office.context.ui.displayDialogAsync(
+      AUTH_URL,
+      {
+        height: 65,
+        width: 45,
+        displayInIframe: false,
+        promptBeforeOpen: false
       },
-      cache: {
-        cacheLocation: "sessionStorage",
-        storeAuthStateInCookie: false
+      function (asyncResult) {
+        if (asyncResult.status !== Office.AsyncResultStatus.Succeeded) {
+          reject(new Error("Nie udało się otworzyć okna logowania: " + asyncResult.error.message));
+          return;
+        }
+
+        authDialog = asyncResult.value;
+
+        authDialog.addEventHandler(
+          Office.EventType.DialogMessageReceived,
+          function (arg) {
+            try {
+              const message = JSON.parse(arg.message);
+
+              if (message.status === "success" && message.accessToken) {
+                authDialog.close();
+                authDialog = null;
+                resolve(message.accessToken);
+                return;
+              }
+
+              if (message.status === "error") {
+                authDialog.close();
+                authDialog = null;
+                reject(new Error(message.message || "Błąd logowania."));
+                return;
+              }
+
+              reject(new Error("Nieznana odpowiedź z okna logowania."));
+            } catch (e) {
+              if (authDialog) {
+                authDialog.close();
+                authDialog = null;
+              }
+              reject(e);
+            }
+          }
+        );
+
+        authDialog.addEventHandler(
+          Office.EventType.DialogEventReceived,
+          function (arg) {
+            // 12006 bywa zwracane po zamknięciu okna; jeśli token już wrócił, ignorujemy.
+            if (arg && arg.error) {
+              console.warn("DialogEventReceived:", arg);
+            }
+          }
+        );
       }
-    });
-  }
-
-  if (!msalInitialized) {
-    await msalApp.initialize();
-    msalInitialized = true;
-
-    try {
-      const redirectResult = await msalApp.handleRedirectPromise();
-      if (redirectResult && redirectResult.account) {
-        msalApp.setActiveAccount(redirectResult.account);
-      }
-    } catch (e) {
-      console.warn("handleRedirectPromise warning:", e);
-    }
-  }
-
-  return msalApp;
+    );
+  });
 }
 
-async function getAccessToken() {
-  const app = await getMsalApp();
-  let accounts = app.getAllAccounts();
-
-  if (accounts.length === 0) {
-    setStatus("Logowanie do Microsoft 365...", false, false);
-
-    const loginResult = await app.loginPopup({
-      scopes: GRAPH_SCOPES,
-      prompt: "select_account"
-    });
-
-    if (loginResult.account) {
-      app.setActiveAccount(loginResult.account);
-    }
-
-    accounts = app.getAllAccounts();
-  }
-
-  const account = app.getActiveAccount() || accounts[0];
-
-  if (!account) {
-    throw new Error("Nie udało się ustalić konta użytkownika po logowaniu.");
-  }
-
-  try {
-    const silentResult = await app.acquireTokenSilent({
-      scopes: GRAPH_SCOPES,
-      account: account
-    });
-
-    return silentResult.accessToken;
-  } catch (e) {
-    setStatus("Odnawianie dostępu do Microsoft Graph...", false, false);
-
-    const popupResult = await app.acquireTokenPopup({
-      scopes: GRAPH_SCOPES,
-      account: account
-    });
-
-    return popupResult.accessToken;
-  }
-}
-
-async function getGraphUser() {
-  const token = await getAccessToken();
-
+async function getGraphUser(accessToken) {
   setStatus("Pobieram dane użytkownika z Microsoft Graph...", false, false);
 
-  const response = await fetch(
-    "https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,jobTitle,businessPhones,mobilePhone,department,officeLocation,companyName",
-    {
-      headers: {
-        Authorization: "Bearer " + token
-      }
+  const response = await fetch(GRAPH_ME_URL, {
+    headers: {
+      Authorization: "Bearer " + accessToken
     }
-  );
+  });
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -161,7 +141,7 @@ function buildSignatureHtml(user) {
   const officeLocation = user.officeLocation || "";
   const companyName = user.companyName || "";
 
-  let html = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:600px;font-family:Calibri, Arial;\">\n  <tr>\n    <td style=\"font-size:9pt;line-height:140%;color:#595959;\">\n      <span style=\"font-size:14pt;color:#DF292F;\">%%DisplayName%%</span><br />\n      <span>%%Title%%</span><br /><br />\n      <span style=\"color:#DF292F;\">email:</span> %%Email%%<br />\n      <span style=\"color:#DF292F;\">tel.</span> %%PhoneNumber%% <span style=\"color:#DF292F;\">kom.</span> %%MobileNumber%%\n    </td>\n  </tr>\n</table>";
+  let html = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:600px;font-family:Calibri, Arial;\">\n  <tr>\n    <td style=\"font-size:9pt;line-height:140%;color:#595959;border-left:3px solid #DF292F;padding-left:15px;\">\n      <span style=\"font-size:14pt;color:#DF292F;\">%%DisplayName%%</span><br />\n      <span>%%Title%%</span><br /><br />\n      <a href=\"mailto:%%Email%%\" style=\"color:#595959;text-decoration:none;\">%%Email%%</a><br />\n      <span style=\"color:#DF292F;\">tel.</span> %%PhoneNumber%%\n      <span style=\"color:#DF292F;\">kom.</span> %%MobileNumber%%\n    </td>\n  </tr>\n</table>";
 
   html = replaceAllSafe(html, "%%DisplayName%%", displayName);
   html = replaceAllSafe(html, "%%Email%%", email);
@@ -180,7 +160,8 @@ async function insertSignature() {
   setStatus("Start...", false, false);
 
   try {
-    const user = await getGraphUser();
+    const accessToken = await getAccessTokenWithDialog();
+    const user = await getGraphUser(accessToken);
     const html = buildSignatureHtml(user);
 
     setStatus("Wstawiam stopkę do wiadomości...", false, false);
