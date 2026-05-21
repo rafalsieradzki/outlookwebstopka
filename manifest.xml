@@ -1,84 +1,127 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<OfficeApp
-  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
-  xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides"
-  xsi:type="MailApp">
-  <Id>b54b25f9-dc3c-4b6f-9ea7-86c8d1e4c5a2</Id>
-  <Version>1.0.0.2</Version>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+           xsi:type="MailApp">
+
+  <Id>9f7b6e6d-2e1f-4a6d-9c27-5c9a6c2d8f31</Id>
+  <Version>1.0.0.3</Version>
   <ProviderName>Grupa Familijna</ProviderName>
   <DefaultLocale>pl-PL</DefaultLocale>
-  <DisplayName DefaultValue="Stopka Familijna"/>
-  <Description DefaultValue="Wstawia firmową stopkę HTML w wiadomości Outlook."/>
-  <IconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/32x32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/128x128.png"/>
-  <SupportUrl DefaultValue="https://github.com/rafalsieradzki/outlookwebstopka/"/>
-  <Hosts><Host Name="Mailbox"/></Hosts>
-  <Requirements><Sets><Set Name="Mailbox" MinVersion="1.10"/></Sets></Requirements>
+
+  <DisplayName DefaultValue="Stopka Familijna TEST"/>
+  <Description DefaultValue="Automatyczna stopka Outlook."/>
+
+  <IconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/assets/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/assets/icon-128.png"/>
+
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+
+  <Requirements>
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.13"/>
+    </Sets>
+  </Requirements>
+
   <FormSettings>
-    <Form xsi:type="ItemRead"><DesktopSettings><SourceLocation DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/taskpane.html"/><RequestedHeight>250</RequestedHeight></DesktopSettings></Form>
-    <Form xsi:type="ItemEdit"><DesktopSettings><SourceLocation DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/taskpane.html"/></DesktopSettings></Form>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/taskpane.html"/>
+        <RequestedHeight>450</RequestedHeight>
+      </DesktopSettings>
+    </Form>
   </FormSettings>
-  <Permissions>ReadWriteItem</Permissions>
+
+  <Permissions>ReadWriteMailbox</Permissions>
+
   <Rule xsi:type="RuleCollection" Mode="Or">
     <Rule xsi:type="ItemIs" ItemType="Message" FormType="Edit"/>
-    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
   </Rule>
-  <DisableEntityHighlighting>false</DisableEntityHighlighting>
-  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
-    <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
-      <Requirements><bt:Sets DefaultMinVersion="1.10"><bt:Set Name="Mailbox"/></bt:Sets></Requirements>
-      <Hosts>
-        <Host xsi:type="MailHost">
-          <Runtimes>
-            <Runtime resid="WebViewRuntime.Url">
-              <Override type="javascript" resid="JSRuntime.Url"/>
-            </Runtime>
-          </Runtimes>
-          <DesktopFormFactor>
-            <FunctionFile resid="Taskpane.Url"/>
-            <ExtensionPoint xsi:type="MessageComposeCommandSurface">
-              <OfficeTab id="TabDefault">
-                <Group id="signatureGroup">
-                  <Label resid="GroupLabel"/>
-                  <Control xsi:type="Button" id="openTaskpaneButton">
-                    <Label resid="TaskpaneButton.Label"/>
-                    <Supertip><Title resid="TaskpaneButton.Label"/><Description resid="TaskpaneButton.Tooltip"/></Supertip>
-                    <Icon><bt:Image size="16" resid="Icon.16x16"/><bt:Image size="32" resid="Icon.32x32"/><bt:Image size="80" resid="Icon.80x80"/></Icon>
-                    <Action xsi:type="ShowTaskpane"><SourceLocation resid="Taskpane.Url"/></Action>
-                  </Control>
-                </Group>
-              </OfficeTab>
-            </ExtensionPoint>
-            <ExtensionPoint xsi:type="LaunchEvent">
-              <LaunchEvents>
-                <LaunchEvent Type="OnNewMessageCompose" FunctionName="onNewMessageComposeHandler"/>
-              </LaunchEvents>
-              <SourceLocation resid="WebViewRuntime.Url"/>
-            </ExtensionPoint>
-          </DesktopFormFactor>
-        </Host>
-      </Hosts>
-      <Resources>
-        <bt:Images>
-          <bt:Image id="Icon.16x16" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/32x32.png"/>
-          <bt:Image id="Icon.32x32" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/32x32.png"/>
-          <bt:Image id="Icon.80x80" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/128x128.png"/>
-        </bt:Images>
-        <bt:Urls>
-          <bt:Url id="Taskpane.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/taskpane.html"/>
-          <bt:Url id="WebViewRuntime.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/event.html"/>
-          <bt:Url id="JSRuntime.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/event.js"/>
-        </bt:Urls>
-        <bt:ShortStrings>
-          <bt:String id="GroupLabel" DefaultValue="Stopka"/>
-          <bt:String id="TaskpaneButton.Label" DefaultValue="Stopka Familijna"/>
-        </bt:ShortStrings>
-        <bt:LongStrings>
-          <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Otwiera panel do ustawienia automatycznej stopki i ręcznego wstawiania."/>
-        </bt:LongStrings>
-      </Resources>
-    </VersionOverrides>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1"
+                    xsi:type="VersionOverridesV1_1">
+
+    <Requirements>
+      <bt:Sets DefaultMinVersion="1.13">
+        <bt:Set Name="Mailbox"/>
+      </bt:Sets>
+    </Requirements>
+
+    <Hosts>
+      <Host xsi:type="MailHost">
+        <Runtimes>
+          <Runtime resid="WebViewRuntime.Url">
+            <Override type="javascript" resid="JS.EventRuntime.Url"/>
+          </Runtime>
+        </Runtimes>
+
+        <DesktopFormFactor>
+
+          <FunctionFile resid="Taskpane.Url"/>
+
+          <ExtensionPoint xsi:type="LaunchEvent">
+            <LaunchEvents>
+              <LaunchEvent Type="OnNewMessageCompose"
+                           FunctionName="onNewMessageComposeHandler"/>
+            </LaunchEvents>
+            <SourceLocation resid="WebViewRuntime.Url"/>
+          </ExtensionPoint>
+
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="msgComposeGroup">
+                <Label resid="GroupLabel"/>
+
+                <Control xsi:type="Button" id="showTaskpaneButton">
+                  <Label resid="ButtonLabel"/>
+                  <Supertip>
+                    <Title resid="ButtonLabel"/>
+                    <Description resid="ButtonTooltip"/>
+                  </Supertip>
+
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16x16" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/assets/icon-80.png"/>
+      </bt:Images>
+
+      <bt:Urls>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/taskpane.html"/>
+        <bt:Url id="WebViewRuntime.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/event.html"/>
+        <bt:Url id="JS.EventRuntime.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/event.js"/>
+      </bt:Urls>
+
+      <bt:ShortStrings>
+        <bt:String id="GroupLabel" DefaultValue="Stopka Familijna"/>
+        <bt:String id="ButtonLabel" DefaultValue="Stopka Familijna"/>
+      </bt:ShortStrings>
+
+      <bt:LongStrings>
+        <bt:String id="ButtonTooltip" DefaultValue="Dodaj lub zarządzaj stopką."/>
+      </bt:LongStrings>
+    </Resources>
+
   </VersionOverrides>
 </OfficeApp>
