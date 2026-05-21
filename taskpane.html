@@ -3,18 +3,68 @@
 <head>
   <meta charset="utf-8" />
   <title>Stopka Familijna</title>
- <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
- <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
- <script src="taskpane.js"></script>
+
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  <script src="taskpane.js"></script>
+
   <style>
-    body { font-family: Segoe UI, Arial, sans-serif; padding: 16px; }
-    button { width: 100%; padding: 12px; font-size: 15px; cursor: pointer; }
-    .hint { color: #666; font-size: 12px; margin-top: 12px; }
+    body {
+      font-family: Segoe UI, Arial, sans-serif;
+      padding: 16px;
+      margin: 0;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 22px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    .hint {
+      color: #666;
+      font-size: 12px;
+      margin-top: 12px;
+      line-height: 1.4;
+    }
+
+    #status {
+      margin-top: 14px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #444;
+      white-space: pre-wrap;
+    }
+
+    #status.error {
+      color: #b00020;
+    }
+
+    #status.ok {
+      color: #107c10;
+    }
   </style>
 </head>
 <body>
   <h2>Stopka Familijna</h2>
+
   <button id="insertSignature">Wstaw stopkę</button>
-  <p class="hint">Stopka zostanie wstawiona w miejscu kursora w treści wiadomości.</p>
+
+  <p class="hint">
+    Stopka zostanie wstawiona w miejscu kursora w treści wiadomości.
+  </p>
+
+  <div id="status"></div>
 </body>
 </html>
