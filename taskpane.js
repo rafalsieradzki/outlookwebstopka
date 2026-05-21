@@ -2,7 +2,7 @@
 // Poprawka: MSAL initialize() dla nowszych wersji @azure/msal-browser.
 
 const CLIENT_ID = "4fbbe7eb-2819-4e83-be4d-6a96aa593088";
-const REDIRECT_URI = "https://rafalsieradzki.github.io";
+const REDIRECT_URI = "https://rafalsieradzki.github.io/outlookwebstopka/taskpane.html";
 const GRAPH_SCOPES = ["User.Read", "User.ReadBasic.All"];
 
 let msalApp = null;
