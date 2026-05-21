@@ -119,10 +119,7 @@ function firstBusinessPhone(user) {
 }
 
 function cleanupPhoneLine(html) {
-  return html
-    .replace(/tel\.\s*<span/g, '<span')
-    .replace(/kom\.\s*(<|$)/g, '$1')
-    .replace(/\s{2,}/g, " ");
+  return html.replace(/\s{2,}/g, " ");
 }
 
 function buildSignatureHtml(user) {
