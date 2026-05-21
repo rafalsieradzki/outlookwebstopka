@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>MSAL Auth Redirect</title>
+
+  <script src="msal-browser.min.js"></script>
+</head>
+<body>
+  <script>
+    const msalConfig = {
+      auth: {
+        clientId: "4fbbe7eb-2819-4e83-be4d-6a96aa593088",
+        authority: "https://login.microsoftonline.com/c906d678-a366-4a55-8042-625ef63569d1",
+        redirectUri: "https://rafalsieradzki.github.io/outlookwebstopka/auth.html"
+      }
+    };
+
+    async function run() {
+      const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+      await msalInstance.initialize();
+
+      try {
+        await msalInstance.handleRedirectPromise();
+      } catch (e) {
+        console.error(e);
+      }
+
+      window.close();
+    }
+
+    run();
+  </script>
+</body>
+</html>
