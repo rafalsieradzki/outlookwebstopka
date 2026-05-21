@@ -45,7 +45,7 @@ async function getMsalApp() {
     msalApp = new msal.PublicClientApplication({
       auth: {
         clientId: CLIENT_ID,
-        authority: "https://login.microsoftonline.com/common",
+        authority: "https://login.microsoftonline.com/c906d678-a366-4a55-8042-625ef63569d1",
         redirectUri: REDIRECT_URI
       },
       cache: {
