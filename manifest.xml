@@ -11,7 +11,7 @@
   <ProviderName>Grupa Familijna</ProviderName>
   <DefaultLocale>pl-PL</DefaultLocale>
 
-  <DisplayName DefaultValue="Stopka Familijna"/>
+  <DisplayName DefaultValue="Stopka Familijna Auto"/>
   <Description DefaultValue="Wstawia firmową stopkę HTML w wiadomości Outlook."/>
   <IconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/32x32.png"/>
   <HighResolutionIconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/128x128.png"/>
