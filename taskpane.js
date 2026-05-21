@@ -1,12 +1,12 @@
 // Stopka Familijna - taskpane.js
-// Wersja z Microsoft Graph, bez alert() i bez dynamicznego ładowania MSAL.
-// MSAL jest ładowany statycznie w taskpane.html.
+// Poprawka: MSAL initialize() dla nowszych wersji @azure/msal-browser.
 
 const CLIENT_ID = "4fbbe7eb-2819-4e83-be4d-6a96aa593088";
 const REDIRECT_URI = "https://rafalsieradzki.github.io";
 const GRAPH_SCOPES = ["User.Read", "User.ReadBasic.All"];
 
 let msalApp = null;
+let msalInitialized = false;
 
 Office.onReady(function () {
   const button = document.getElementById("insertSignature");
@@ -37,23 +37,37 @@ function setButtonBusy(isBusy) {
 }
 
 async function getMsalApp() {
-  if (msalApp) return msalApp;
-
   if (typeof msal === "undefined") {
-    throw new Error("Biblioteka MSAL nie została załadowana.");
+    throw new Error("Biblioteka MSAL nie została załadowana. Sprawdź plik msal-browser.min.js.");
   }
 
-  msalApp = new msal.PublicClientApplication({
-    auth: {
-      clientId: CLIENT_ID,
-      authority: "https://login.microsoftonline.com/common",
-      redirectUri: REDIRECT_URI
-    },
-    cache: {
-      cacheLocation: "sessionStorage",
-      storeAuthStateInCookie: false
+  if (!msalApp) {
+    msalApp = new msal.PublicClientApplication({
+      auth: {
+        clientId: CLIENT_ID,
+        authority: "https://login.microsoftonline.com/common",
+        redirectUri: REDIRECT_URI
+      },
+      cache: {
+        cacheLocation: "sessionStorage",
+        storeAuthStateInCookie: false
+      }
+    });
+  }
+
+  if (!msalInitialized) {
+    await msalApp.initialize();
+    msalInitialized = true;
+
+    try {
+      const redirectResult = await msalApp.handleRedirectPromise();
+      if (redirectResult && redirectResult.account) {
+        msalApp.setActiveAccount(redirectResult.account);
+      }
+    } catch (e) {
+      console.warn("handleRedirectPromise warning:", e);
     }
-  });
+  }
 
   return msalApp;
 }
@@ -78,6 +92,10 @@ async function getAccessToken() {
   }
 
   const account = app.getActiveAccount() || accounts[0];
+
+  if (!account) {
+    throw new Error("Nie udało się ustalić konta użytkownika po logowaniu.");
+  }
 
   try {
     const silentResult = await app.acquireTokenSilent({
@@ -143,7 +161,7 @@ function buildSignatureHtml(user) {
   const officeLocation = user.officeLocation || "";
   const companyName = user.companyName || "";
 
-  let html = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:600px;font-family:Calibri, Arial;\">\n  <tr>\n    <td>\n      <span style=\"font-size:14pt;color:#DF292F;\">%%DisplayName%%</span><br>\n      <span>%%Title%%</span><br><br>\n      <span>email:</span> %%Email%%<br>\n      <span>tel.</span> %%PhoneNumber%% <span>kom.</span> %%MobileNumber%%\n    </td>\n  </tr>\n</table>";
+  let html = "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:600px;font-family:Calibri, Arial;\">\n  <tr>\n    <td style=\"font-size:9pt;line-height:140%;color:#595959;\">\n      <span style=\"font-size:14pt;color:#DF292F;\">%%DisplayName%%</span><br />\n      <span>%%Title%%</span><br /><br />\n      <span style=\"color:#DF292F;\">email:</span> %%Email%%<br />\n      <span style=\"color:#DF292F;\">tel.</span> %%PhoneNumber%% <span style=\"color:#DF292F;\">kom.</span> %%MobileNumber%%\n    </td>\n  </tr>\n</table>";
 
   html = replaceAllSafe(html, "%%DisplayName%%", displayName);
   html = replaceAllSafe(html, "%%Email%%", email);
