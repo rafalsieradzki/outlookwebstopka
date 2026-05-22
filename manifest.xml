@@ -6,12 +6,12 @@
   xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides"
   xsi:type="MailApp">
 
-  <Id>e2a8b5c4-9d7a-4f93-b6ef-1b7b5e2a9c44</Id>
-  <Version>1.0.0.5</Version>
+  <Id>92a762fd-5b48-405b-8344-b30f6de8cf97</Id>
+  <Version>2.0.0.0</Version>
   <ProviderName>Grupa Familijna</ProviderName>
   <DefaultLocale>pl-PL</DefaultLocale>
 
-  <DisplayName DefaultValue="Stopka Familijna Auto"/>
+  <DisplayName DefaultValue="Stopka Auto GF"/>
   <Description DefaultValue="Wstawia firmową stopkę HTML w wiadomości Outlook."/>
   <IconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/32x32.png"/>
   <HighResolutionIconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/128x128.png"/>
@@ -23,7 +23,7 @@
 
   <Requirements>
     <Sets>
-      <Set Name="Mailbox" MinVersion="1.13"/>
+      <Set Name="Mailbox" MinVersion="1.10"/>
     </Sets>
   </Requirements>
 
@@ -54,7 +54,7 @@
                     xsi:type="VersionOverridesV1_0">
 
     <Requirements>
-      <bt:Sets DefaultMinVersion="1.13">
+      <bt:Sets DefaultMinVersion="1.10">
         <bt:Set Name="Mailbox"/>
       </bt:Sets>
     </Requirements>
@@ -62,7 +62,7 @@
     <Hosts>
       <Host xsi:type="MailHost">
         <DesktopFormFactor>
-          <FunctionFile resid="WebViewRuntime.Url"/>
+          <FunctionFile resid="Taskpane.Url"/>
 
           <ExtensionPoint xsi:type="MessageComposeCommandSurface">
             <OfficeTab id="TabDefault">
@@ -112,7 +112,7 @@
                       xsi:type="VersionOverridesV1_1">
 
       <Requirements>
-        <bt:Sets DefaultMinVersion="1.13">
+        <bt:Sets DefaultMinVersion="1.10">
           <bt:Set Name="Mailbox"/>
         </bt:Sets>
       </Requirements>
@@ -126,7 +126,7 @@
           </Runtimes>
 
           <DesktopFormFactor>
-            <FunctionFile resid="WebViewRuntime.Url"/>
+            <FunctionFile resid="Taskpane.Url"/>
 
             <ExtensionPoint xsi:type="MessageComposeCommandSurface">
               <OfficeTab id="TabDefault">
