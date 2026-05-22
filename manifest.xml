@@ -23,7 +23,7 @@
 
   <Requirements>
     <Sets>
-      <Set Name="Mailbox" MinVersion="1.10"/>
+      <Set Name="Mailbox" MinVersion="1.13"/>
     </Sets>
   </Requirements>
 
@@ -54,7 +54,7 @@
                     xsi:type="VersionOverridesV1_0">
 
     <Requirements>
-      <bt:Sets DefaultMinVersion="1.10">
+      <bt:Sets DefaultMinVersion="1.13">
         <bt:Set Name="Mailbox"/>
       </bt:Sets>
     </Requirements>
@@ -101,7 +101,7 @@
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Stopka"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Stopka Familijna"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Stopka Auto GF"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Otwiera panel do ustawienia automatycznej stopki i ręcznego wstawiania."/>
@@ -112,7 +112,7 @@
                       xsi:type="VersionOverridesV1_1">
 
       <Requirements>
-        <bt:Sets DefaultMinVersion="1.10">
+        <bt:Sets DefaultMinVersion="1.13">
           <bt:Set Name="Mailbox"/>
         </bt:Sets>
       </Requirements>
@@ -176,7 +176,7 @@
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="GroupLabel" DefaultValue="Stopka"/>
-          <bt:String id="TaskpaneButton.Label" DefaultValue="Stopka Familijna"/>
+          <bt:String id="TaskpaneButton.Label" DefaultValue="Stopka Auto GF"/>
         </bt:ShortStrings>
         <bt:LongStrings>
           <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Otwiera panel do ustawienia automatycznej stopki i ręcznego wstawiania."/>
