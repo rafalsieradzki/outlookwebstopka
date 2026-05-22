@@ -7,7 +7,7 @@
   xsi:type="MailApp">
 
   <Id>e2a8b5c4-9d7a-4f93-b6ef-1b7b5e2a9c44</Id>
-  <Version>1.0.0.3</Version>
+  <Version>1.0.0.4</Version>
   <ProviderName>Grupa Familijna</ProviderName>
   <DefaultLocale>pl-PL</DefaultLocale>
 
@@ -62,7 +62,7 @@
     <Hosts>
       <Host xsi:type="MailHost">
         <DesktopFormFactor>
-          <FunctionFile resid="Taskpane.Url"/>
+          <FunctionFile resid="WebViewRuntime.Url"/>
 
           <ExtensionPoint xsi:type="MessageComposeCommandSurface">
             <OfficeTab id="TabDefault">
@@ -126,7 +126,7 @@
           </Runtimes>
 
           <DesktopFormFactor>
-            <FunctionFile resid="Taskpane.Url"/>
+            <FunctionFile resid="WebViewRuntime.Url"/>
 
             <ExtensionPoint xsi:type="MessageComposeCommandSurface">
               <OfficeTab id="TabDefault">
