@@ -7,7 +7,7 @@
   xsi:type="MailApp">
 
   <Id>e2a8b5c4-9d7a-4f93-b6ef-1b7b5e2a9c44</Id>
-  <Version>1.0.0.4</Version>
+  <Version>1.0.0.5</Version>
   <ProviderName>Grupa Familijna</ProviderName>
   <DefaultLocale>pl-PL</DefaultLocale>
 
@@ -23,7 +23,7 @@
 
   <Requirements>
     <Sets>
-      <Set Name="Mailbox" MinVersion="1.10"/>
+      <Set Name="Mailbox" MinVersion="1.13"/>
     </Sets>
   </Requirements>
 
@@ -54,7 +54,7 @@
                     xsi:type="VersionOverridesV1_0">
 
     <Requirements>
-      <bt:Sets DefaultMinVersion="1.10">
+      <bt:Sets DefaultMinVersion="1.13">
         <bt:Set Name="Mailbox"/>
       </bt:Sets>
     </Requirements>
@@ -112,7 +112,7 @@
                       xsi:type="VersionOverridesV1_1">
 
       <Requirements>
-        <bt:Sets DefaultMinVersion="1.10">
+        <bt:Sets DefaultMinVersion="1.13">
           <bt:Set Name="Mailbox"/>
         </bt:Sets>
       </Requirements>
