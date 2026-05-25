@@ -1,7 +1,8 @@
-// event.js - wersja normalna, bez czerwonego testowego komunikatu.
+// event.js - wersja normalna v2, bez czerwonego testowego komunikatu.
 // Automatyczne wstawianie stopki przy OnNewMessageCompose.
+console.log("EVENT JS VERSION 2");
 
-const SIGNATURE_MARKER = 'data-familijna-signature="1"';
+const SIGNATURE_MARKER = 'data-familijna-signature="2"';
 const DEBUG_MARKER = 'data-familijna-event-debug="1"';
 
 function replaceAllSafe(text, token, value) {
@@ -25,7 +26,7 @@ function buildSignatureHtml() {
   html = replaceAllSafe(html, "%%OfficeLocation%%", "");
   html = replaceAllSafe(html, "%%CompanyName%%", "");
 
-  return '<div data-familijna-signature="1">' + html + '</div>';
+  return '<div data-familijna-signature="2">' + html + '</div>';
 }
 
 function onNewMessageComposeHandler(event) {
