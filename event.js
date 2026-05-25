@@ -1,19 +1,11 @@
-// event.js - TEST tylko dla Rafała
-console.log("EVENT JS RAFAL TEST");
+// event.js - prosty test eventu bez czerwonego tekstu
+console.log("EVENT JS SIMPLE TEST");
 
 function onNewMessageComposeHandler(event) {
   try {
-    const email = (Office.context.mailbox.userProfile.emailAddress || "").toLowerCase();
-
-    if (email !== "rafal.sieradzki@familijna.pl") {
-      event.completed();
-      return;
-    }
 
     const html =
-      '<div style="border:3px solid red;padding:10px;color:red;font-size:16px;">' +
-      'TEST EVENT RAFAL DZIALA' +
-      '</div>';
+      'Pozdrawiam,<br>__<br><br>';
 
     Office.context.mailbox.item.body.prependAsync(
       html,
