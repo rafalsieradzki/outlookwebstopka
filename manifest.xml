@@ -7,11 +7,11 @@
   xsi:type="MailApp">
 
   <Id>92a762fd-5b48-405b-8344-b30f6de8cf97</Id>
-  <Version>2.0.0.0</Version>
+  <Version>2.0.0.1</Version>
   <ProviderName>Grupa Familijna</ProviderName>
   <DefaultLocale>pl-PL</DefaultLocale>
 
-  <DisplayName DefaultValue="Stopka Auto GF"/>
+  <DisplayName DefaultValue="Stopka Familijna v2"/>
   <Description DefaultValue="Wstawia firmową stopkę HTML w wiadomości Outlook."/>
   <IconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/32x32.png"/>
   <HighResolutionIconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/128x128.png"/>
@@ -101,7 +101,7 @@
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Stopka"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Stopka Auto GF"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Stopka Familijna v2"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Otwiera panel do ustawienia automatycznej stopki i ręcznego wstawiania."/>
@@ -154,7 +154,7 @@
             <ExtensionPoint xsi:type="LaunchEvent">
               <LaunchEvents>
                 <LaunchEvent Type="OnNewMessageCompose"
-                             FunctionName="onNewMessageComposeHandler"/>
+                             FunctionName="onNewMessageComposeHandlerV2"/>
               </LaunchEvents>
               <SourceLocation resid="WebViewRuntime.Url"/>
             </ExtensionPoint>
@@ -171,8 +171,8 @@
         </bt:Images>
         <bt:Urls>
           <bt:Url id="Taskpane.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/taskpane.html"/>
-          <bt:Url id="WebViewRuntime.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/event.html"/>
-          <bt:Url id="JSRuntime.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/event.js"/>
+          <bt:Url id="WebViewRuntime.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/event-v2.html"/>
+          <bt:Url id="JSRuntime.Url" DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/event-v2.js"/>
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="GroupLabel" DefaultValue="Stopka"/>
