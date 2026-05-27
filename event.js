@@ -1,28 +1,23 @@
-// event.js / event-v2.js - FINAL
-// Sprawdza checkbox autoSignatureEnabled i wstawia stopke tylko gdy jest true.
+// Stopka Familijna - event.js
+// FINAL: jeden event runtime. Odczytuje checkbox z Office.context.roamingSettings.
+// Jeśli autoSignatureEnabled !== "true", nie robi nic.
 
 const STORAGE_AUTO_KEY = "autoSignatureEnabled";
 const STORAGE_PROFILE_KEY = "signatureUserProfile";
-const SIGNATURE_MARKER = 'data-familijna-signature="final"';
+const SIGNATURE_MARKER = 'data-familijna-signature="1"';
+
+function getRoamingValue(key) {
+  try {
+    if (Office && Office.context && Office.context.roamingSettings) {
+      const value = Office.context.roamingSettings.get(key);
+      return value === undefined || value === null ? null : String(value);
+    }
+  } catch (e) {}
+  return null;
+}
 
 function replaceAllSafe(text, token, value) {
   return text.split(token).join(value || "");
-}
-
-async function storageGet(key) {
-  try {
-    if (window.OfficeRuntime && OfficeRuntime.storage && OfficeRuntime.storage.getItem) {
-      return await OfficeRuntime.storage.getItem(key);
-    }
-  } catch (e) {}
-
-  try {
-    if (window.localStorage) {
-      return window.localStorage.getItem(key);
-    }
-  } catch (e) {}
-
-  return null;
 }
 
 function firstBusinessPhone(user) {
@@ -36,10 +31,15 @@ function buildPhoneHtml(phoneNumber, mobileNumber) {
   return parts.join(" ");
 }
 
-async function getStoredUserProfile() {
-  const profileJson = await storageGet(STORAGE_PROFILE_KEY);
+function getStoredUserProfile() {
+  const profileJson = getRoamingValue(STORAGE_PROFILE_KEY);
   if (!profileJson) return null;
-  try { return JSON.parse(profileJson); } catch (e) { return null; }
+
+  try {
+    return JSON.parse(profileJson);
+  } catch (e) {
+    return null;
+  }
 }
 
 function buildSignatureHtml(user) {
@@ -56,7 +56,43 @@ function buildSignatureHtml(user) {
   const companyName = user.companyName || "";
   const phoneHtml = buildPhoneHtml(phoneNumber, mobileNumber);
 
-  let html = "\n<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:520px;font-family:Calibri, Arial;\">\n  <tr>\n    <td style=\"margin:auto;width:220px;\" align=\"center\">\n      <img src=\"https://www.familijna.pl/uploads/drive/familijna_logotyp.png\" width=\"60%\" alt=\"GRUPA FAMILIJNA\" />\n    </td>\n    <td style=\"font-size:9pt;line-height:140%;color:#595959;border-left:3px solid #DF292F;padding-left:15px;\">\n      <span style=\"font-size:14pt;color:#DF292F;\">%%DisplayName%%</span><br />\n      <span>%%Title%%</span><br /><br />\n      <a href=\"https://familijna.pl\" style=\"color:#595959;text-decoration:none;\"><span style=\"color:#DF292F;\">www.</span>familijna.pl</a>\n      <span style=\"color:#DF292F;\">email:</span>\n      <a href=\"mailto:%%Email%%\" style=\"color:#595959;text-decoration:none;\">%%Email%%</a>\n      <br />\n      %%PhoneHtml%%\n      <div style=\"padding-top:25px;\">\n        <a href=\"https://www.facebook.com/familijna\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/fb.png\" height=\"25\" width=\"25\" alt=\"facebook\" style=\"margin-right:5px;\" /></a>&nbsp;\n        <a href=\"https://www.instagram.com/familijna/\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/ig.png\" height=\"25\" width=\"25\" alt=\"instagram\" style=\"margin-right:5px;\" /></a>&nbsp;\n        <a href=\"https://m.me/familijna\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/ms.png\" height=\"25\" width=\"25\" alt=\"messenger\" style=\"margin-right:5px;\" /></a>&nbsp;\n        <a href=\"https://goo.gl/maps/kpEMXw6deUcjidot9\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/gm.png\" height=\"25\" width=\"25\" alt=\"google maps\" style=\"margin-right:5px;\" /></a>&nbsp;\n        <a href=\"https://www.youtube.com/@familijna1631/featured\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/yt.png\" height=\"25\" width=\"25\" alt=\"youtube\" style=\"margin-right:5px;\" /></a>&nbsp;\n        <a href=\"https://www.linkedin.com/company/familijna\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/in.png\" height=\"25\" width=\"25\" alt=\"linkedin\" style=\"margin-right:5px;\" /></a>&nbsp;\n      </div>\n    </td>\n  </tr>\n</table>\n<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"900\" style=\"width:900px;max-width:900px;font-family:Calibri, Arial;margin-top:6px;\">\n  <tr>\n    <td style=\"font-size:7pt;line-height:120%;color:#595959;\">\n      <p style=\"margin:0 0 8px 0;\"><span style=\"color:#DF292F;\">GRUPA FAMILIJNA</span> Spółka z ograniczoną odpowiedzialnością, Kuźnica Czeszycka 11, 56-320 Krośnice, tel. 71 384 56 13</p>\n      <p style=\"margin:0 0 20px 0;\">NIP: 9161351695, REGON: 020182505, BDO: 000084673.</p>\n      <p style=\"margin:0 0 8px 0;\">Informacja dla odbiorcy: Informacje zawarte w niniejszym email-u oraz załącznikach do niego mają charakter poufny, są przeznaczone wyłącznie dla wskazanych adresatów. Jeśli nie są Państwo adresatem tego email-a, prosimy niezwłocznie o jego skasowanie oraz poinformowanie nadawcy. Wykonywanie kopii, ujawnienie, dystrybucja lub używanie niniejszego email-a do innych celów jest zabronione. Spółka Grupa Familijna Sp. z o.o. nie ponosi żadnej odpowiedzialności za zmiany email-a dokonane po jego wysłaniu.</p>\n      <p style=\"margin:0;\">Administratorem danych osobowych jest Grupa Familijna sp. z o.o. z siedzibą w Kuźnicy Czeszyckiej. Dane osobowe zawarte w korespondencji mailowej są przetwarzane w celu odpowiadania na pytania, dokonywania ustaleń, zawierania i realizacji umów z kontrahentami, rozpoznawania reklamacji, jak również ustalenia, dochodzenia i obrony roszczeń. Mają Państwo w szczególności prawo dostępu do swoich danych osobowych, żądania ich usunięcia i wniesienia sprzeciwu wobec przetwarzania danych. Szczegóły dotyczące przetwarzania danych osobowych i przysługujących praw znajdują się w <a href=\"https://www.grupafamilijna.pl/pl/polityka-prywatnosci\" style=\"color:#0645AD;text-decoration:underline;\">Polityce prywatności</a>.</p>\n    </td>\n  </tr>\n</table>\n";
+  let html = `<table cellpadding="0" cellspacing="0" border="0" style="max-width:520px;font-family:Calibri, Arial;">
+    <tr>
+        <td style="margin:auto;width:220px;" align="center">
+            <img src="https://www.familijna.pl/uploads/drive/familijna_logotyp.png" width="80%" alt="GRUPA FAMILIJNA" />
+        </td>
+        <td style="font-size:9pt;line-height:140%;color:#595959;border-left:3px solid #DF292F;padding-left:15px;">
+            <span style="font-size:14pt;color:#DF292F;">%%DisplayName%%</span>
+            <br />
+            <span>%%Title%%</span>
+            <br /><br />
+            <a href="https://familijna.pl" style="color:#595959;text-decoration: none;"><span style="color:#DF292F;">www.</span>familijna.pl</a>
+            <span style="color:#DF292F;">email:</span>
+            <a href="mailto:%%Email%%" style="color:#595959;text-decoration: none;">%%Email%%</a>
+            <br />
+            %%PhoneHtml%%
+            <div style="padding-top:25px;">
+                <a href="https://www.facebook.com/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/fb.png" height="25" width="25" alt="facebook" style="margin-right:5px;" /></a>&nbsp;
+                <a href="https://www.instagram.com/familijna/" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/ig.png" height="25" width="25" alt="instagram" style="margin-right:5px;" /></a>&nbsp;
+                <a href="https://m.me/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/ms.png" height="25" width="25" alt="messenger" style="margin-right:5px;" /></a>&nbsp;
+                <a href="https://goo.gl/maps/kpEMXw6deUcjidot9" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/gm.png" height="25" width="25" alt="google maps" style="margin-right:5px;" /></a>&nbsp;
+                <a href="https://www.youtube.com/@familijna1631/featured" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/yt.png" height="25" width="25" alt="youtube" style="margin-right:5px;" /></a>&nbsp;
+                <a href="https://www.linkedin.com/company/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/in.png" height="25" width="25" alt="linkedin" style="margin-right:5px;" /></a>&nbsp;
+            </div>
+        </td>
+    </tr>
+</table>
+
+<table cellpadding="0" cellspacing="0" border="0" width="900" style="width:900px;max-width:900px;font-family:Calibri, Arial;margin-top:6px;">
+    <tr>
+        <td style="font-size:7pt;line-height:120%;color:#595959;">
+            <p style="margin:0 0 8px 0;"><span style="color:#DF292F;">GRUPA FAMILIJNA</span> Spółka z ograniczoną odpowiedzialnością, Kuźnica Czeszycka 11, 56-320 Krośnice, tel. 71 384 56 13</p>
+            <p style="margin:0 0 20px 0;">NIP: 9161351695, REGON: 020182505, BDO: 000084673.</p>
+            <p style="margin:0 0 8px 0;">Informacja dla odbiorcy: Informacje zawarte w niniejszym email-u oraz załącznikach do niego mają charakter poufny, są przeznaczone wyłącznie dla wskazanych adresatów. Jeśli nie są Państwo adresatem tego email-a, prosimy niezwłocznie o jego skasowanie oraz poinformowanie nadawcy. Wykonywanie kopii, ujawnienie, dystrybucja lub używanie niniejszego email-a do innych celów jest zabronione. Spółka Grupa Familijna Sp. z o.o. nie ponosi żadnej odpowiedzialności za zmiany email-a dokonane po jego wysłaniu.</p>
+            <p style="margin:0;">Administratorem danych osobowych jest Grupa Familijna sp. z o.o. z siedzibą w Kuźnicy Czeszyckiej. Dane osobowe zawarte w korespondencji mailowej są przetwarzane w celu odpowiadania na pytania, dokonywania ustaleń, zawierania i realizacji umów z kontrahentami, rozpoznawania reklamacji, jak również ustalenia, dochodzenia i obrony roszczeń. Mają Państwo w szczególności prawo dostępu do swoich danych osobowych, żądania ich usunięcia i wniesienia sprzeciwu wobec przetwarzania danych. Szczegóły dotyczące przetwarzania danych osobowych i przysługujących praw znajdują się w <a href="https://www.grupafamilijna.pl/pl/polityka-prywatnosci" style="color:#0645AD;text-decoration:underline;">Polityce prywatności</a>.</p>
+        </td>
+    </tr>
+</table>`;
 
   html = replaceAllSafe(html, "%%DisplayName%%", displayName);
   html = replaceAllSafe(html, "%%Email%%", email);
@@ -68,25 +104,25 @@ function buildSignatureHtml(user) {
   html = replaceAllSafe(html, "%%OfficeLocation%%", officeLocation);
   html = replaceAllSafe(html, "%%CompanyName%%", companyName);
 
-  return '<div data-familijna-signature="final">' + html + '</div>';
+  return '<div data-familijna-signature="1">' + html + '</div>';
 }
 
-async function insertSignatureIfEnabled(event) {
+function onNewMessageComposeHandler(event) {
   try {
-    const enabled = await storageGet(STORAGE_AUTO_KEY);
+    const enabled = getRoamingValue(STORAGE_AUTO_KEY);
 
     if (enabled !== "true") {
       event.completed();
       return;
     }
 
-    const user = await getStoredUserProfile();
+    const user = getStoredUserProfile();
     const signatureHtml = buildSignatureHtml(user);
 
     Office.context.mailbox.item.body.getAsync(
       Office.CoercionType.Html,
       { asyncContext: event },
-      function (getResult) {
+      function(getResult) {
         if (getResult.status !== Office.AsyncResultStatus.Succeeded) {
           getResult.asyncContext.completed();
           return;
@@ -103,8 +139,11 @@ async function insertSignatureIfEnabled(event) {
 
         Office.context.mailbox.item.body.setAsync(
           newBody,
-          { coercionType: Office.CoercionType.Html, asyncContext: getResult.asyncContext },
-          function () {
+          {
+            coercionType: Office.CoercionType.Html,
+            asyncContext: getResult.asyncContext
+          },
+          function() {
             getResult.asyncContext.completed();
           }
         );
@@ -115,13 +154,4 @@ async function insertSignatureIfEnabled(event) {
   }
 }
 
-function onNewMessageComposeHandler(event) {
-  insertSignatureIfEnabled(event);
-}
-
-function onNewMessageComposeHandlerV2(event) {
-  insertSignatureIfEnabled(event);
-}
-
 Office.actions.associate("onNewMessageComposeHandler", onNewMessageComposeHandler);
-Office.actions.associate("onNewMessageComposeHandlerV2", onNewMessageComposeHandlerV2);
