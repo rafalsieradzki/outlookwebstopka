@@ -1,5 +1,5 @@
 // Stopka Familijna - taskpane.js
-// Poprawka zapisu ustawień: bezpieczny wrapper OfficeRuntime.storage + fallback localStorage.
+// Wersja zgodna z manifestem 3.0.0.1: checkbox zapisuje ustawienia do Office.context.roamingSettings.
 
 const AUTH_URL = "https://rafalsieradzki.github.io/outlookwebstopka/auth.html";
 const GRAPH_ME_URL = "https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,jobTitle,businessPhones,mobilePhone,department,officeLocation,companyName";
@@ -17,12 +17,12 @@ Office.onReady(async function () {
 
   const checkbox = document.getElementById("autoSignatureEnabled");
   if (checkbox) {
-    const enabled = await storageGet(STORAGE_AUTO_KEY);
-    checkbox.checked = enabled === "true";
+    const enabled = roamingGet(STORAGE_AUTO_KEY);
+    checkbox.checked = enabled === true || enabled === "true";
     checkbox.onchange = onAutoSignatureChanged;
   }
 
-  setStatus("Dodatek gotowy 3.0.0.1 DEBUG.", false, true);
+  setStatus("Dodatek gotowy 3.0.0.1 ROAMING.", false, true);
 });
 
 function setStatus(message, isError, isOk) {
@@ -45,45 +45,52 @@ function setButtonBusy(isBusy) {
 }
 
 
-async function storageGet(key) {
+function roamingGet(key) {
   try {
-    if (window.OfficeRuntime && OfficeRuntime.storage && OfficeRuntime.storage.getItem) {
-      return await OfficeRuntime.storage.getItem(key);
-    }
+    if (!Office.context || !Office.context.roamingSettings) return null;
+    return Office.context.roamingSettings.get(key);
   } catch (e) {
-    console.warn("OfficeRuntime.storage.getItem failed:", e);
-  }
-
-  try {
-    return window.localStorage ? window.localStorage.getItem(key) : null;
-  } catch (e) {
-    console.warn("localStorage.getItem failed:", e);
+    console.warn("roamingSettings.get failed:", e);
     return null;
   }
 }
 
+function roamingSave() {
+  return new Promise(function (resolve, reject) {
+    try {
+      if (!Office.context || !Office.context.roamingSettings) {
+        reject(new Error("Brak Office.context.roamingSettings."));
+        return;
+      }
+
+      Office.context.roamingSettings.saveAsync(function (result) {
+        if (result.status === Office.AsyncResultStatus.Succeeded) {
+          resolve();
+        } else {
+          const msg = result.error && result.error.message ? result.error.message : "Nieznany błąd saveAsync.";
+          reject(new Error(msg));
+        }
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function roamingSetAndSave(key, value) {
+  if (!Office.context || !Office.context.roamingSettings) {
+    throw new Error("Brak Office.context.roamingSettings.");
+  }
+
+  Office.context.roamingSettings.set(key, value);
+  await roamingSave();
+  return Office.context.roamingSettings.get(key);
+}
+
 async function storageSet(key, value) {
-  const stringValue = value == null ? "" : String(value);
-
-  try {
-    if (window.OfficeRuntime && OfficeRuntime.storage && OfficeRuntime.storage.setItem) {
-      await OfficeRuntime.storage.setItem(key, stringValue);
-      return;
-    }
-  } catch (e) {
-    console.warn("OfficeRuntime.storage.setItem failed:", e);
-  }
-
-  try {
-    if (window.localStorage) {
-      window.localStorage.setItem(key, stringValue);
-      return;
-    }
-  } catch (e) {
-    console.warn("localStorage.setItem failed:", e);
-  }
-
-  throw new Error("Brak dostępnego mechanizmu zapisu ustawień w tym środowisku Outlook.");
+  // Używane przy ręcznym wstawianiu stopki i zapisie profilu.
+  // Celowo zapisujemy do roamingSettings, bo event-based activation widzi właśnie ten magazyn.
+  return await roamingSetAndSave(key, value);
 }
 
 
@@ -92,28 +99,38 @@ async function onAutoSignatureChanged() {
   const enabled = checkbox && checkbox.checked;
 
   try {
-    await storageSet(STORAGE_AUTO_KEY, enabled ? "true" : "false");
+    const savedAuto = await roamingSetAndSave(STORAGE_AUTO_KEY, enabled === true);
 
     if (enabled) {
-      setStatus("Pobieram dane użytkownika do automatu...", false, false);
+      setStatus("Zapisano roamingSettings: autoSignatureEnabled=" + savedAuto + "\nPobieram dane użytkownika do automatu...", false, false);
+
       const accessToken = await getAccessTokenWithDialog();
       const user = await getGraphUser(accessToken);
-      await storageSet(STORAGE_PROFILE_KEY, JSON.stringify(user));
-      setStatus("Automatyczne dodawanie stopki jest włączone.", false, true);
+      const savedProfile = await roamingSetAndSave(STORAGE_PROFILE_KEY, JSON.stringify(user));
+      const verifyAuto = roamingGet(STORAGE_AUTO_KEY);
+
+      setStatus(
+        "Zapisano roamingSettings: autoSignatureEnabled=" + verifyAuto +
+        "\nsignatureUserProfile=" + (savedProfile ? "OK" : "BRAK"),
+        false,
+        true
+      );
     } else {
-      setStatus("Automatyczne dodawanie stopki jest wyłączone.", false, true);
+      setStatus("Zapisano roamingSettings: autoSignatureEnabled=" + savedAuto, false, true);
     }
   } catch (e) {
     if (checkbox) checkbox.checked = false;
 
     try {
-      await storageSet(STORAGE_AUTO_KEY, "false");
+      Office.context.roamingSettings.set(STORAGE_AUTO_KEY, false);
+      await roamingSave();
     } catch (_) {}
 
     const message = e && e.message ? e.message : String(e);
-    setStatus("Nie udało się włączyć automatu:\n" + message, true, false);
+    setStatus("Nie udało się zapisać roamingSettings. Checkbox cofnięty na false.\n" + message, true, false);
   }
 }
+
 
 function getAccessTokenWithDialog() {
   return new Promise(function (resolve, reject) {
