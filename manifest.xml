@@ -6,12 +6,12 @@
   xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides"
   xsi:type="MailApp">
 
-  <Id>7f3f5e92-5b89-4f17-9e3a-4f9dfd8f6d21</Id>
-  <Version>3.0.0.1</Version>
+  <Id>9F7C8A6E-4F4A-4B93-8D9A-7D2C3E5F1A91</Id>
+  <Version>3.0.0.2</Version>
   <ProviderName>Grupa Familijna</ProviderName>
   <DefaultLocale>pl-PL</DefaultLocale>
 
-  <DisplayName DefaultValue="Stopka Familijna v3"/>
+  <DisplayName DefaultValue="Stopka Familijna v3.2"/>
   <Description DefaultValue="Wstawia firmową stopkę HTML w wiadomości Outlook."/>
   <IconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/32x32.png"/>
   <HighResolutionIconUrl DefaultValue="https://rafalsieradzki.github.io/outlookwebstopka/128x128.png"/>
