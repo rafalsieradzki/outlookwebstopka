@@ -296,19 +296,27 @@ async function debugRoamingSettings() {
       localAuto = "localStorage error: " + (e && e.message ? e.message : String(e));
     }
 
-    alert(
-      "ROAMING SETTINGS\\n" +
-      "autoSignatureEnabled = " + autoValue + "\\n" +
-      "signatureUserProfile = " + (profileValue ? String(profileValue).substring(0, 500) : "null") + "\\n\\n" +
-      "OFFICERUNTIME STORAGE\\n" +
-      "autoSignatureEnabled = " + officeRuntimeAuto + "\\n" +
-      "signatureUserProfile = " + (officeRuntimeProfile ? String(officeRuntimeProfile).substring(0, 500) : "null") + "\\n\\n" +
-      "LOCAL STORAGE\\n" +
-      "autoSignatureEnabled = " + localAuto + "\\n" +
-      "signatureUserProfile = " + (localProfile ? String(localProfile).substring(0, 500) : "null")
-    );
+    const output =
+      "ROAMING SETTINGS\n" +
+      "autoSignatureEnabled = " + autoValue + "\n" +
+      "signatureUserProfile = " + (profileValue ? String(profileValue).substring(0, 500) : "null") + "\n\n" +
+      "OFFICERUNTIME STORAGE\n" +
+      "autoSignatureEnabled = " + officeRuntimeAuto + "\n" +
+      "signatureUserProfile = " + (officeRuntimeProfile ? String(officeRuntimeProfile).substring(0, 500) : "null") + "\n\n" +
+      "LOCAL STORAGE\n" +
+      "autoSignatureEnabled = " + localAuto + "\n" +
+      "signatureUserProfile = " + (localProfile ? String(localProfile).substring(0, 500) : "null");
+
+    const out = document.getElementById("roamingDebugOutput");
+    if (out) {
+      out.textContent = output;
+    } else {
+      alert(output);
+    }
   } catch (e) {
-    alert("Błąd debugRoamingSettings: " + (e && e.message ? e.message : String(e)));
+    const out = document.getElementById("roamingDebugOutput");
+    const msg = "Błąd debugRoamingSettings: " + (e && e.message ? e.message : String(e));
+    if (out) out.textContent = msg; else alert(msg);
   }
 }
 
