@@ -1,10 +1,13 @@
-// Stopka Familijna - event.js
-// FINAL: jeden event runtime. Odczytuje checkbox z Office.context.roamingSettings.
-// Jeśli autoSignatureEnabled !== "true", nie robi nic.
+// event.js - diagnostyka Office.context.roamingSettings
+// Uzywac tylko na testowych uzytkownikach.
 
-const STORAGE_AUTO_KEY = "autoSignatureEnabled";
-const STORAGE_PROFILE_KEY = "signatureUserProfile";
-const SIGNATURE_MARKER = 'data-familijna-signature="1"';
+const DIAG_MARKER = 'data-gf-roaming-diagnostic="1"';
+
+function safeText(value) {
+  if (value === null) return "null";
+  if (value === undefined) return "undefined";
+  try { return String(value); } catch (e) { return "[unreadable]"; }
+}
 
 function getRoamingValue(key) {
   try {
@@ -12,112 +15,53 @@ function getRoamingValue(key) {
       const value = Office.context.roamingSettings.get(key);
       return value === undefined || value === null ? null : String(value);
     }
-  } catch (e) {}
-  return null;
-}
-
-function replaceAllSafe(text, token, value) {
-  return text.split(token).join(value || "");
-}
-
-function firstBusinessPhone(user) {
-  return user && user.businessPhones && user.businessPhones.length > 0 ? (user.businessPhones[0] || "") : "";
-}
-
-function buildPhoneHtml(phoneNumber, mobileNumber) {
-  const parts = [];
-  if (phoneNumber) parts.push('<span style="color:#DF292F;">tel.</span> ' + phoneNumber);
-  if (mobileNumber) parts.push('<span style="color:#DF292F;">kom.</span> ' + mobileNumber);
-  return parts.join(" ");
-}
-
-function getStoredUserProfile() {
-  const profileJson = getRoamingValue(STORAGE_PROFILE_KEY);
-  if (!profileJson) return null;
-
-  try {
-    return JSON.parse(profileJson);
+    return "roamingSettings unavailable";
   } catch (e) {
-    return null;
+    return "roamingSettings ERROR: " + (e && e.message ? e.message : String(e));
   }
 }
 
-function buildSignatureHtml(user) {
-  const officeProfile = Office.context.mailbox.userProfile || {};
-  user = user || {};
-
-  const displayName = user.displayName || officeProfile.displayName || "";
-  const email = user.mail || user.userPrincipalName || officeProfile.emailAddress || "";
-  const title = user.jobTitle || "";
-  const phoneNumber = firstBusinessPhone(user);
-  const mobileNumber = user.mobilePhone || "";
-  const department = user.department || "";
-  const officeLocation = user.officeLocation || "";
-  const companyName = user.companyName || "";
-  const phoneHtml = buildPhoneHtml(phoneNumber, mobileNumber);
-
-  let html = `<table cellpadding="0" cellspacing="0" border="0" style="max-width:520px;font-family:Calibri, Arial;">
-    <tr>
-        <td style="margin:auto;width:220px;" align="center">
-            <img src="https://www.familijna.pl/uploads/drive/familijna_logotyp.png" width="80%" alt="GRUPA FAMILIJNA" />
-        </td>
-        <td style="font-size:9pt;line-height:140%;color:#595959;border-left:3px solid #DF292F;padding-left:15px;">
-            <span style="font-size:14pt;color:#DF292F;">%%DisplayName%%</span>
-            <br />
-            <span>%%Title%%</span>
-            <br /><br />
-            <a href="https://familijna.pl" style="color:#595959;text-decoration: none;"><span style="color:#DF292F;">www.</span>familijna.pl</a>
-            <span style="color:#DF292F;">email:</span>
-            <a href="mailto:%%Email%%" style="color:#595959;text-decoration: none;">%%Email%%</a>
-            <br />
-            %%PhoneHtml%%
-            <div style="padding-top:25px;">
-                <a href="https://www.facebook.com/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/fb.png" height="25" width="25" alt="facebook" style="margin-right:5px;" /></a>&nbsp;
-                <a href="https://www.instagram.com/familijna/" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/ig.png" height="25" width="25" alt="instagram" style="margin-right:5px;" /></a>&nbsp;
-                <a href="https://m.me/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/ms.png" height="25" width="25" alt="messenger" style="margin-right:5px;" /></a>&nbsp;
-                <a href="https://goo.gl/maps/kpEMXw6deUcjidot9" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/gm.png" height="25" width="25" alt="google maps" style="margin-right:5px;" /></a>&nbsp;
-                <a href="https://www.youtube.com/@familijna1631/featured" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/yt.png" height="25" width="25" alt="youtube" style="margin-right:5px;" /></a>&nbsp;
-                <a href="https://www.linkedin.com/company/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/in.png" height="25" width="25" alt="linkedin" style="margin-right:5px;" /></a>&nbsp;
-            </div>
-        </td>
-    </tr>
-</table>
-
-<table cellpadding="0" cellspacing="0" border="0" width="900" style="width:900px;max-width:900px;font-family:Calibri, Arial;margin-top:6px;">
-    <tr>
-        <td style="font-size:7pt;line-height:120%;color:#595959;">
-            <p style="margin:0 0 8px 0;"><span style="color:#DF292F;">GRUPA FAMILIJNA</span> Spółka z ograniczoną odpowiedzialnością, Kuźnica Czeszycka 11, 56-320 Krośnice, tel. 71 384 56 13</p>
-            <p style="margin:0 0 20px 0;">NIP: 9161351695, REGON: 020182505, BDO: 000084673.</p>
-            <p style="margin:0 0 8px 0;">Informacja dla odbiorcy: Informacje zawarte w niniejszym email-u oraz załącznikach do niego mają charakter poufny, są przeznaczone wyłącznie dla wskazanych adresatów. Jeśli nie są Państwo adresatem tego email-a, prosimy niezwłocznie o jego skasowanie oraz poinformowanie nadawcy. Wykonywanie kopii, ujawnienie, dystrybucja lub używanie niniejszego email-a do innych celów jest zabronione. Spółka Grupa Familijna Sp. z o.o. nie ponosi żadnej odpowiedzialności za zmiany email-a dokonane po jego wysłaniu.</p>
-            <p style="margin:0;">Administratorem danych osobowych jest Grupa Familijna sp. z o.o. z siedzibą w Kuźnicy Czeszyckiej. Dane osobowe zawarte w korespondencji mailowej są przetwarzane w celu odpowiadania na pytania, dokonywania ustaleń, zawierania i realizacji umów z kontrahentami, rozpoznawania reklamacji, jak również ustalenia, dochodzenia i obrony roszczeń. Mają Państwo w szczególności prawo dostępu do swoich danych osobowych, żądania ich usunięcia i wniesienia sprzeciwu wobec przetwarzania danych. Szczegóły dotyczące przetwarzania danych osobowych i przysługujących praw znajdują się w <a href="https://www.grupafamilijna.pl/pl/polityka-prywatnosci" style="color:#0645AD;text-decoration:underline;">Polityce prywatności</a>.</p>
-        </td>
-    </tr>
-</table>`;
-
-  html = replaceAllSafe(html, "%%DisplayName%%", displayName);
-  html = replaceAllSafe(html, "%%Email%%", email);
-  html = replaceAllSafe(html, "%%Title%%", title);
-  html = replaceAllSafe(html, "%%PhoneNumber%%", phoneNumber);
-  html = replaceAllSafe(html, "%%MobileNumber%%", mobileNumber);
-  html = replaceAllSafe(html, "%%PhoneHtml%%", phoneHtml);
-  html = replaceAllSafe(html, "%%Department%%", department);
-  html = replaceAllSafe(html, "%%OfficeLocation%%", officeLocation);
-  html = replaceAllSafe(html, "%%CompanyName%%", companyName);
-
-  return '<div data-familijna-signature="1">' + html + '</div>';
-}
-
-function onNewMessageComposeHandler(event) {
+function getOfficeRuntimeValue(key, callback) {
   try {
-    const enabled = getRoamingValue(STORAGE_AUTO_KEY);
-
-    if (enabled !== "true") {
-      event.completed();
+    if (window.OfficeRuntime && OfficeRuntime.storage && OfficeRuntime.storage.getItem) {
+      OfficeRuntime.storage.getItem(key)
+        .then(function(value) { callback(null, value); })
+        .catch(function(err) { callback("OfficeRuntime ERROR: " + safeText(err && err.message ? err.message : err), null); });
       return;
     }
+    callback("OfficeRuntime.storage unavailable", null);
+  } catch (e) {
+    callback("OfficeRuntime ERROR: " + (e && e.message ? e.message : String(e)), null);
+  }
+}
 
-    const user = getStoredUserProfile();
-    const signatureHtml = buildSignatureHtml(user);
+function getOfficeUserProfileHtml() {
+  try {
+    const profile = Office.context.mailbox.userProfile || {};
+    return [
+      "displayName: " + safeText(profile.displayName),
+      "emailAddress: " + safeText(profile.emailAddress)
+    ].join("<br>");
+  } catch (e) {
+    return "userProfile ERROR: " + (e && e.message ? e.message : String(e));
+  }
+}
+
+function insertDiagnostic(event, officeRuntimeAuto, officeRuntimeErr) {
+  try {
+    const roamingAuto = getRoamingValue("autoSignatureEnabled");
+    const roamingProfile = getRoamingValue("signatureUserProfile");
+
+    const html =
+      '<div data-gf-roaming-diagnostic="1" style="font-family:Calibri,Arial;font-size:11pt;border:1px solid #555;padding:8px;margin:8px 0;background:#fff;color:#000;">' +
+      '<b>DIAGNOSTYKA ROAMING SETTINGS GF</b><br><br>' +
+      '<b>Event:</b> DZIALA<br>' +
+      '<b>roamingSettings autoSignatureEnabled:</b> ' + safeText(roamingAuto) + '<br>' +
+      '<b>OfficeRuntime.storage autoSignatureEnabled:</b> ' + safeText(officeRuntimeErr || officeRuntimeAuto) + '<br><br>' +
+      '<b>roamingSettings signatureUserProfile:</b> ' + safeText(roamingProfile).substring(0, 700) + '<br><br>' +
+      '<b>Office userProfile:</b><br>' + getOfficeUserProfileHtml() + '<br><br>' +
+      '<b>Czas:</b> ' + new Date().toISOString() +
+      '</div><br>';
 
     Office.context.mailbox.item.body.getAsync(
       Office.CoercionType.Html,
@@ -130,15 +74,13 @@ function onNewMessageComposeHandler(event) {
 
         const currentBody = getResult.value || "";
 
-        if (currentBody.indexOf(SIGNATURE_MARKER) !== -1) {
+        if (currentBody.indexOf(DIAG_MARKER) !== -1) {
           getResult.asyncContext.completed();
           return;
         }
 
-        const newBody = currentBody + "<br><br>" + signatureHtml;
-
         Office.context.mailbox.item.body.setAsync(
-          newBody,
+          html + currentBody,
           {
             coercionType: Office.CoercionType.Html,
             asyncContext: getResult.asyncContext
@@ -154,4 +96,19 @@ function onNewMessageComposeHandler(event) {
   }
 }
 
+function runDiagnostic(event) {
+  getOfficeRuntimeValue("autoSignatureEnabled", function(err, value) {
+    insertDiagnostic(event, value, err);
+  });
+}
+
+function onNewMessageComposeHandler(event) {
+  runDiagnostic(event);
+}
+
+function onNewMessageComposeHandlerV2(event) {
+  runDiagnostic(event);
+}
+
 Office.actions.associate("onNewMessageComposeHandler", onNewMessageComposeHandler);
+Office.actions.associate("onNewMessageComposeHandlerV2", onNewMessageComposeHandlerV2);
