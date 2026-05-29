@@ -260,6 +260,13 @@ async function insertSignatureManual() {
 
 async function debugRoamingSettings() {
   try {
+    try {
+      const status = document.getElementById("status");
+      if (status) {
+        status.textContent = "Kliknięto Pokaż roamingSettings...";
+        status.className = "ok";
+      }
+    } catch (_) {}
     const settings = Office.context.roamingSettings;
 
     const autoValue = settings ? settings.get("autoSignatureEnabled") : null;
@@ -305,3 +312,6 @@ async function debugRoamingSettings() {
   }
 }
 
+
+
+window.debugRoamingSettings = debugRoamingSettings;
