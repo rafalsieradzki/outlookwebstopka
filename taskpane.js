@@ -9,6 +9,8 @@ const STORAGE_PROFILE_KEY = "signatureUserProfile";
 let authDialog = null;
 
 Office.onReady(async function () {
+  cleanupLegacySignatureStorage();
+
   const button = document.getElementById("insertSignature");
   if (button) button.onclick = insertSignatureManual;
 
@@ -22,8 +24,18 @@ Office.onReady(async function () {
     checkbox.onchange = onAutoSignatureChanged;
   }
 
-  setStatus("Dodatek gotowy 3.0.0.1 ROAMING.", false, true);
+  setStatus("Dodatek gotowy 3.0.0.1 ROAMING ONLY 2026-05-29.", false, true);
 });
+
+function cleanupLegacySignatureStorage() {
+  // Usuwa stare, mylace wartosci sterujace. Nie czysci calego localStorage, bo MSAL moze go uzywac do logowania.
+  try {
+    if (window.localStorage) {
+      window.localStorage.removeItem(STORAGE_AUTO_KEY);
+      window.localStorage.removeItem(STORAGE_PROFILE_KEY);
+    }
+  } catch (e) {}
+}
 
 function setStatus(message, isError, isOk) {
   const status = document.getElementById("status");
@@ -277,66 +289,43 @@ async function insertSignatureManual() {
 
 async function debugRoamingSettings() {
   try {
-    try {
-      const status = document.getElementById("status");
-      if (status) {
-        status.textContent = "Kliknięto Pokaż roamingSettings...";
-        status.className = "ok";
-      }
-    } catch (_) {}
-    const settings = Office.context.roamingSettings;
+    const settings = Office.context && Office.context.roamingSettings ? Office.context.roamingSettings : null;
 
-    const autoValue = settings ? settings.get("autoSignatureEnabled") : null;
-    const profileValue = settings ? settings.get("signatureUserProfile") : null;
-
-    let officeRuntimeAuto = null;
-    let officeRuntimeProfile = null;
-
-    try {
-      if (window.OfficeRuntime && OfficeRuntime.storage && OfficeRuntime.storage.getItem) {
-        officeRuntimeAuto = await OfficeRuntime.storage.getItem("autoSignatureEnabled");
-        officeRuntimeProfile = await OfficeRuntime.storage.getItem("signatureUserProfile");
-      }
-    } catch (e) {
-      officeRuntimeAuto = "OfficeRuntime error: " + (e && e.message ? e.message : String(e));
-    }
+    const autoValue = settings ? settings.get(STORAGE_AUTO_KEY) : null;
+    const profileValue = settings ? settings.get(STORAGE_PROFILE_KEY) : null;
 
     let localAuto = null;
     let localProfile = null;
-
     try {
       if (window.localStorage) {
-        localAuto = window.localStorage.getItem("autoSignatureEnabled");
-        localProfile = window.localStorage.getItem("signatureUserProfile");
+        localAuto = window.localStorage.getItem(STORAGE_AUTO_KEY);
+        localProfile = window.localStorage.getItem(STORAGE_PROFILE_KEY);
       }
     } catch (e) {
       localAuto = "localStorage error: " + (e && e.message ? e.message : String(e));
     }
 
     const output =
-      "ROAMING SETTINGS\n" +
+      "WERSJA PLIKU: ROAMING ONLY 2026-05-29\n\n" +
+      "ROAMING SETTINGS - JEDYNE ZRODLO PRAWDY\n" +
       "autoSignatureEnabled = " + autoValue + "\n" +
-      "signatureUserProfile = " + (profileValue ? String(profileValue).substring(0, 500) : "null") + "\n\n" +
-      "OFFICERUNTIME STORAGE\n" +
-      "autoSignatureEnabled = " + officeRuntimeAuto + "\n" +
-      "signatureUserProfile = " + (officeRuntimeProfile ? String(officeRuntimeProfile).substring(0, 500) : "null") + "\n\n" +
-      "LOCAL STORAGE\n" +
+      "signatureUserProfile = " + (profileValue ? String(profileValue).substring(0, 1000) : "null") + "\n\n" +
+      "LOCAL STORAGE - LEGACY, IGNOROWANE PRZEZ EVENT\n" +
       "autoSignatureEnabled = " + localAuto + "\n" +
-      "signatureUserProfile = " + (localProfile ? String(localProfile).substring(0, 500) : "null");
+      "signatureUserProfile = " + (localProfile ? String(localProfile).substring(0, 500) : "null") + "\n\n" +
+      "Jesli ROAMING SETTINGS jest null/false, automatyczna stopka nie zadziala, nawet gdy LOCAL STORAGE pokazuje true.";
 
     const out = document.getElementById("roamingDebugOutput");
-    if (out) {
-      out.textContent = output;
-    } else {
-      alert(output);
-    }
+    if (out) out.textContent = output; else alert(output);
+
+    setStatus("Diagnostyka odczytana z roamingSettings.", false, true);
   } catch (e) {
     const out = document.getElementById("roamingDebugOutput");
-    const msg = "Błąd debugRoamingSettings: " + (e && e.message ? e.message : String(e));
+    const msg = "Blad debugRoamingSettings: " + (e && e.message ? e.message : String(e));
     if (out) out.textContent = msg; else alert(msg);
+    setStatus(msg, true, false);
   }
 }
-
 
 
 window.debugRoamingSettings = debugRoamingSettings;
