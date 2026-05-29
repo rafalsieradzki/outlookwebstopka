@@ -20,7 +20,7 @@ Office.onReady(async function () {
     checkbox.onchange = onAutoSignatureChanged;
   }
 
-  setStatus("Dodatek gotowy.", false, true);
+  setStatus("Dodatek gotowy 3.0.0.1.", false, true);
 });
 
 function setStatus(message, isError, isOk) {
