@@ -1,16 +1,20 @@
 /*
  * EVENT-V2 NEUTRALNY
- * WERSJA: EVENT-V2 NEUTRAL 2026-06-01 01
- * Ten plik nie jest wskazywany przez aktualny manifest. Zostaje neutralny na wypadek starego cache.
+ * WERSJA: EVENT-V2 NEUTRAL 2026-06-01 02
+ * Ten plik nic nie wstawia. Zostaje neutralny na wypadek starego cache Outlooka.
  */
 
-function onNewMessageComposeHandlerV2(event) {
+function completeEventV2(event) {
   try {
     if (event && typeof event.completed === "function") {
       event.completed();
     }
   } catch (e) {
   }
+}
+
+function onNewMessageComposeHandlerV2(event) {
+  completeEventV2(event);
 }
 
 try {
