@@ -1,12 +1,12 @@
 // Stopka Familijna - diagnostyka eventu
-// WERSJA: BOTH EVENTS DIAG NOTATKI 2026-05-29 03
-// Bezpieczenstwo: tekst diagnostyczny jest wstawiany tylko dla mailbox.userProfile.emailAddress == notatki@familijna.pl
+// WERSJA: EVENT DIAG NOTATKI RELAXED 2026-06-01 01
+// Bezpiecznik: diagnostyka dziala tylko, gdy biezace konto Outlooka LUB profil zapisany w roamingSettings to notatki@familijna.pl.
 
 const GF_DIAG_ALLOWED_MAIL = "notatki@familijna.pl";
-const GF_DIAG_VERSION = "BOTH EVENTS DIAG NOTATKI 2026-05-29 03";
+const GF_DIAG_VERSION = "EVENT DIAG NOTATKI RELAXED 2026-06-01 01";
 const GF_AUTO_KEY = "autoSignatureEnabled";
 const GF_PROFILE_KEY = "signatureUserProfile";
-const GF_MARKER = 'data-familijna-event-diag="2026-05-29-03"';
+const GF_MARKER = 'data-familijna-event-diag="2026-06-01-01"';
 
 function gfDone(event) {
   try {
@@ -47,35 +47,8 @@ function gfGetRoamingMail() {
   }
 }
 
-function gfGetBodyHtml() {
-  return new Promise(function(resolve, reject) {
-    Office.context.mailbox.item.body.getAsync(
-      Office.CoercionType.Html,
-      function(result) {
-        if (result.status === Office.AsyncResultStatus.Succeeded) {
-          resolve(result.value || "");
-        } else {
-          reject(result.error || new Error("body.getAsync failed"));
-        }
-      }
-    );
-  });
-}
-
-function gfSetBodyHtml(html) {
-  return new Promise(function(resolve, reject) {
-    Office.context.mailbox.item.body.setAsync(
-      html,
-      { coercionType: Office.CoercionType.Html },
-      function(result) {
-        if (result.status === Office.AsyncResultStatus.Succeeded) {
-          resolve();
-        } else {
-          reject(result.error || new Error("body.setAsync failed"));
-        }
-      }
-    );
-  });
+function gfBoolText(value) {
+  return value === true ? "true" : value === false ? "false" : String(value);
 }
 
 function gfHtmlEscape(value) {
@@ -95,33 +68,74 @@ function gfBuildDiagHtml(handlerName, mailboxMail, roamingMail, enabled) {
     'allowed=' + gfHtmlEscape(GF_DIAG_ALLOWED_MAIL) + '<br>',
     'mailboxMail=' + gfHtmlEscape(mailboxMail || '(brak)') + '<br>',
     'roamingMail=' + gfHtmlEscape(roamingMail || '(brak)') + '<br>',
-    'autoSignatureEnabled=' + gfHtmlEscape(String(enabled)) + '<br>',
+    'autoSignatureEnabled=' + gfHtmlEscape(gfBoolText(enabled)) + '<br>',
     'time=' + gfHtmlEscape(new Date().toISOString()),
     '</div>'
   ].join('');
+}
+
+function gfBodyGetHtml() {
+  return new Promise(function(resolve, reject) {
+    Office.context.mailbox.item.body.getAsync(Office.CoercionType.Html, function(result) {
+      if (result.status === Office.AsyncResultStatus.Succeeded) resolve(result.value || "");
+      else reject(result.error || new Error("body.getAsync failed"));
+    });
+  });
+}
+
+function gfBodySetHtml(html) {
+  return new Promise(function(resolve, reject) {
+    Office.context.mailbox.item.body.setAsync(html, { coercionType: Office.CoercionType.Html }, function(result) {
+      if (result.status === Office.AsyncResultStatus.Succeeded) resolve();
+      else reject(result.error || new Error("body.setAsync failed"));
+    });
+  });
+}
+
+function gfSetSignatureHtml(html) {
+  return new Promise(function(resolve, reject) {
+    try {
+      if (!Office.context.mailbox.item.body.setSignatureAsync) {
+        reject(new Error("setSignatureAsync unavailable"));
+        return;
+      }
+      Office.context.mailbox.item.body.setSignatureAsync(html, { coercionType: Office.CoercionType.Html }, function(result) {
+        if (result.status === Office.AsyncResultStatus.Succeeded) resolve();
+        else reject(result.error || new Error("setSignatureAsync failed"));
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function gfInsertDiagHtml(html) {
+  // Najpierw metoda dedykowana do stopki. Jesli klient jej nie obsluguje, fallback do body.get/set.
+  try {
+    await gfSetSignatureHtml(html);
+    return;
+  } catch (e) {}
+
+  var body = await gfBodyGetHtml();
+  if (body.indexOf(GF_MARKER) !== -1) return;
+  await gfBodySetHtml(body + '<br><br>' + html);
 }
 
 async function gfDiagnosticHandler(event, handlerName) {
   try {
     var mailboxMail = gfGetMailboxMail();
     var roamingMail = gfGetRoamingMail();
-
-    // Najwazniejszy bezpiecznik: nie wstawiaj nic nikomu poza notatki@familijna.pl.
-    // Dla diagnostyki nie ufamy zapisanemu profilowi; wymagana jest zgodnosc biezacej skrzynki Outlooka.
-    if (mailboxMail !== GF_DIAG_ALLOWED_MAIL) {
-      gfDone(event);
-      return;
-    }
-
     var enabled = gfRoamingGet(GF_AUTO_KEY);
-    var body = await gfGetBodyHtml();
 
-    if (body.indexOf(GF_MARKER) !== -1) {
+    // Bezpiecznik: dopuszczamy diagnostyke tylko dla notatki@familijna.pl,
+    // ale sprawdzamy i biezace konto Outlooka, i profil zapisany w roamingSettings.
+    if (mailboxMail !== GF_DIAG_ALLOWED_MAIL && roamingMail !== GF_DIAG_ALLOWED_MAIL) {
       gfDone(event);
       return;
     }
 
-    await gfSetBodyHtml(body + '<br><br>' + gfBuildDiagHtml(handlerName, mailboxMail, roamingMail, enabled));
+    var diagHtml = gfBuildDiagHtml(handlerName, mailboxMail, roamingMail, enabled);
+    await gfInsertDiagHtml(diagHtml);
     gfDone(event);
   } catch (e) {
     gfDone(event);
