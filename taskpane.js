@@ -1,153 +1,99 @@
-// Stopka Familijna - taskpane.js
-// Wersja zgodna z manifestem 3.0.0.1: checkbox zapisuje ustawienia do Office.context.roamingSettings.
-
+/* Stopka Familijna v3.1 - panel */
 const AUTH_URL = "https://rafalsieradzki.github.io/outlookwebstopka/auth.html";
-const GRAPH_ME_URL = "https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,jobTitle,businessPhones,mobilePhone,department,officeLocation,companyName";
-const STORAGE_AUTO_KEY = "autoSignatureEnabled";
-const STORAGE_PROFILE_KEY = "signatureUserProfile";
-
 let authDialog = null;
 
-Office.onReady(async function () {
-  cleanupLegacySignatureStorage();
-
-  const button = document.getElementById("insertSignature");
-  if (button) button.onclick = insertSignatureManual;
-
-  const debugButton = document.getElementById("debugRoamingSettings");
-  if (debugButton) debugButton.onclick = debugRoamingSettings;
-
+Office.onReady(function () {
+  const insertButton = document.getElementById("insertSignature");
+  const diagnosticButton = document.getElementById("runDiagnostics");
   const checkbox = document.getElementById("autoSignatureEnabled");
+
+  if (insertButton) insertButton.onclick = insertSignatureManual;
+  if (diagnosticButton) diagnosticButton.onclick = runDiagnostics;
+
   if (checkbox) {
-    const enabled = roamingGet(STORAGE_AUTO_KEY);
+    const enabled = roamingGet(GF_AUTO_KEY);
     checkbox.checked = enabled === true || enabled === "true";
     checkbox.onchange = onAutoSignatureChanged;
   }
 
-  setStatus("Dodatek gotowy 3.0.0.1 ROAMING ONLY 2026-05-29.", false, true);
+  logDiag("Panel gotowy. Wersja 3.1.0.0.");
+  setStatus("Dodatek gotowy.", false, true);
 });
-
-function cleanupLegacySignatureStorage() {
-  // Usuwa stare, mylace wartosci sterujace. Nie czysci calego localStorage, bo MSAL moze go uzywac do logowania.
-  try {
-    if (window.localStorage) {
-      window.localStorage.removeItem(STORAGE_AUTO_KEY);
-      window.localStorage.removeItem(STORAGE_PROFILE_KEY);
-    }
-  } catch (e) {}
-}
 
 function setStatus(message, isError, isOk) {
   const status = document.getElementById("status");
   if (!status) return;
-
   status.textContent = message || "";
   status.className = "";
-
   if (isError) status.className = "error";
   if (isOk) status.className = "ok";
 }
 
-function setButtonBusy(isBusy) {
-  const button = document.getElementById("insertSignature");
-  if (!button) return;
-
-  button.disabled = isBusy;
-  button.textContent = isBusy ? "Pobieram dane..." : "Wstaw stopkę teraz";
+function logDiag(message, isError) {
+  const out = document.getElementById("diagnosticOutput");
+  if (!out) return;
+  const time = new Date().toLocaleTimeString();
+  const current = out.textContent && out.textContent !== "Diagnostyka pojawi się tutaj." ? out.textContent + "\n" : "";
+  out.textContent = current + "[" + time + "] " + message;
+  out.className = isError ? "error" : "";
 }
 
+function clearDiag() {
+  const out = document.getElementById("diagnosticOutput");
+  if (out) {
+    out.textContent = "";
+    out.className = "";
+  }
+}
+
+function setBusy(id, isBusy, busyText, normalText) {
+  const button = document.getElementById(id);
+  if (!button) return;
+  button.disabled = isBusy;
+  if (isBusy && busyText) button.textContent = busyText;
+  if (!isBusy && normalText) button.textContent = normalText;
+}
+
+function roamingSettings() {
+  return Office.context && Office.context.roamingSettings ? Office.context.roamingSettings : null;
+}
 
 function roamingGet(key) {
   try {
-    if (!Office.context || !Office.context.roamingSettings) return null;
-    return Office.context.roamingSettings.get(key);
+    const settings = roamingSettings();
+    return settings ? settings.get(key) : null;
   } catch (e) {
-    console.warn("roamingSettings.get failed:", e);
     return null;
   }
 }
 
 function roamingSave() {
   return new Promise(function (resolve, reject) {
-    try {
-      if (!Office.context || !Office.context.roamingSettings) {
-        reject(new Error("Brak Office.context.roamingSettings."));
-        return;
-      }
-
-      Office.context.roamingSettings.saveAsync(function (result) {
-        if (result.status === Office.AsyncResultStatus.Succeeded) {
-          resolve();
-        } else {
-          const msg = result.error && result.error.message ? result.error.message : "Nieznany błąd saveAsync.";
-          reject(new Error(msg));
-        }
-      });
-    } catch (e) {
-      reject(e);
+    const settings = roamingSettings();
+    if (!settings) {
+      reject(new Error("Brak Office.context.roamingSettings."));
+      return;
     }
+    settings.saveAsync(function (result) {
+      if (result.status === Office.AsyncResultStatus.Succeeded) {
+        resolve();
+      } else {
+        reject(new Error(result.error && result.error.message ? result.error.message : "Nieznany błąd saveAsync."));
+      }
+    });
   });
 }
 
 async function roamingSetAndSave(key, value) {
-  if (!Office.context || !Office.context.roamingSettings) {
-    throw new Error("Brak Office.context.roamingSettings.");
-  }
-
-  Office.context.roamingSettings.set(key, value);
+  const settings = roamingSettings();
+  if (!settings) throw new Error("Brak Office.context.roamingSettings.");
+  settings.set(key, value);
   await roamingSave();
-  return Office.context.roamingSettings.get(key);
+  return settings.get(key);
 }
-
-async function storageSet(key, value) {
-  // Używane przy ręcznym wstawianiu stopki i zapisie profilu.
-  // Celowo zapisujemy do roamingSettings, bo event-based activation widzi właśnie ten magazyn.
-  return await roamingSetAndSave(key, value);
-}
-
-
-async function onAutoSignatureChanged() {
-  const checkbox = document.getElementById("autoSignatureEnabled");
-  const enabled = checkbox && checkbox.checked;
-
-  try {
-    const savedAuto = await roamingSetAndSave(STORAGE_AUTO_KEY, enabled === true);
-
-    if (enabled) {
-      setStatus("Zapisano roamingSettings: autoSignatureEnabled=" + savedAuto + "\nPobieram dane użytkownika do automatu...", false, false);
-
-      const accessToken = await getAccessTokenWithDialog();
-      const user = await getGraphUser(accessToken);
-      const savedProfile = await roamingSetAndSave(STORAGE_PROFILE_KEY, JSON.stringify(user));
-      const verifyAuto = roamingGet(STORAGE_AUTO_KEY);
-
-      setStatus(
-        "Zapisano roamingSettings: autoSignatureEnabled=" + verifyAuto +
-        "\nsignatureUserProfile=" + (savedProfile ? "OK" : "BRAK"),
-        false,
-        true
-      );
-    } else {
-      setStatus("Zapisano roamingSettings: autoSignatureEnabled=" + savedAuto, false, true);
-    }
-  } catch (e) {
-    if (checkbox) checkbox.checked = false;
-
-    try {
-      Office.context.roamingSettings.set(STORAGE_AUTO_KEY, false);
-      await roamingSave();
-    } catch (_) {}
-
-    const message = e && e.message ? e.message : String(e);
-    setStatus("Nie udało się zapisać roamingSettings. Checkbox cofnięty na false.\n" + message, true, false);
-  }
-}
-
 
 function getAccessTokenWithDialog() {
   return new Promise(function (resolve, reject) {
-    setStatus("Otwieram logowanie Microsoft 365...", false, false);
-
     Office.context.ui.displayDialogAsync(
       AUTH_URL,
       { height: 65, width: 45, displayInIframe: false, promptBeforeOpen: false },
@@ -158,31 +104,21 @@ function getAccessTokenWithDialog() {
         }
 
         authDialog = asyncResult.value;
-
         authDialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
           try {
             const message = JSON.parse(arg.message);
-
             if (message.status === "success" && message.accessToken) {
               authDialog.close();
               authDialog = null;
               resolve(message.accessToken);
               return;
             }
-
-            if (message.status === "error") {
-              authDialog.close();
-              authDialog = null;
-              reject(new Error(message.message || "Błąd logowania."));
-              return;
-            }
-
-            reject(new Error("Nieznana odpowiedź z okna logowania."));
+            authDialog.close();
+            authDialog = null;
+            reject(new Error(message.message || "Błąd logowania Microsoft 365."));
           } catch (e) {
-            if (authDialog) {
-              authDialog.close();
-              authDialog = null;
-            }
+            if (authDialog) authDialog.close();
+            authDialog = null;
             reject(e);
           }
         });
@@ -192,140 +128,124 @@ function getAccessTokenWithDialog() {
 }
 
 async function getGraphUser(accessToken) {
-  setStatus("Pobieram dane użytkownika z Microsoft Graph...", false, false);
-
-  const response = await fetch(GRAPH_ME_URL, {
+  const response = await fetch(GF_GRAPH_ME_URL, {
     headers: { Authorization: "Bearer " + accessToken }
   });
-
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error("Graph API: " + response.status + " " + errorText);
   }
-
   return await response.json();
 }
 
-
-function replaceAllSafe(text, token, value) { return text.split(token).join(value || ""); }
-
-function firstBusinessPhone(user) {
-  return user && user.businessPhones && user.businessPhones.length > 0 ? (user.businessPhones[0] || "") : "";
+async function ensureGraphProfile() {
+  logDiag("Otwieram logowanie Microsoft 365...");
+  const accessToken = await getAccessTokenWithDialog();
+  logDiag("Token pobrany. Pobieram profil z Microsoft Graph...");
+  const user = await getGraphUser(accessToken);
+  logDiag("Graph OK: " + (user.mail || user.userPrincipalName || "brak maila") + ", " + (user.displayName || "brak nazwy"));
+  await roamingSetAndSave(GF_PROFILE_KEY, JSON.stringify(user));
+  logDiag("Profil zapisany w roamingSettings.");
+  return user;
 }
 
-function buildPhoneHtml(phoneNumber, mobileNumber) {
-  const parts = [];
-  if (phoneNumber) parts.push('<span style="color:#DF292F;">tel.</span> ' + phoneNumber);
-  if (mobileNumber) parts.push('<span style="color:#DF292F;">kom.</span> ' + mobileNumber);
-  return parts.join(" ");
-}
-
-function buildSignatureHtml(user) {
-  const officeProfile = Office.context.mailbox.userProfile || {};
-  user = user || {};
-
-  const displayName = user.displayName || officeProfile.displayName || "";
-  const email = user.mail || user.userPrincipalName || officeProfile.emailAddress || "";
-  const title = user.jobTitle || "";
-  const phoneNumber = firstBusinessPhone(user);
-  const mobileNumber = user.mobilePhone || "";
-  const department = user.department || "";
-  const officeLocation = user.officeLocation || "";
-  const companyName = user.companyName || "";
-  const phoneHtml = buildPhoneHtml(phoneNumber, mobileNumber);
-
-  let html = "\n<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:520px;font-family:Calibri, Arial;\">\n    <tr>\n        <td style=\"margin:auto;width:220px;\" align=\"center\">\n            <img src=\"https://www.familijna.pl/uploads/drive/familijna_logotyp.png\" width=\"80%\" alt=\"GRUPA FAMILIJNA\" />\n        </td>\n        <td style=\"font-size:9pt;line-height:140%;color:#595959;border-left:3px solid #DF292F;padding-left:15px;\">\n            <span style=\"font-size:14pt;color:#DF292F;\">%%DisplayName%%</span>\n            <br />\n            <span>%%Title%%</span>\n            <br /><br />\n            <a href=\"https://familijna.pl\" style=\"color:#595959;text-decoration: none;\"><span style=\"color:#DF292F;\">www.</span>familijna.pl</a>\n            <span style=\"color:#DF292F;\">email:</span>\n            <a href=\"mailto:%%Email%%\" style=\"color:#595959;text-decoration: none;\">%%Email%%</a>\n            <br />\n            %%PhoneHtml%%\n            <div style=\"padding-top:25px;\">\n                <a href=\"https://www.facebook.com/familijna\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/fb.png\" height=\"25\" width=\"25\" alt=\"facebook\" style=\"margin-right:5px;\" /></a>&nbsp;\n                <a href=\"https://www.instagram.com/familijna/\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/ig.png\" height=\"25\" width=\"25\" alt=\"instagram\" style=\"margin-right:5px;\" /></a>&nbsp;\n                <a href=\"https://m.me/familijna\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/ms.png\" height=\"25\" width=\"25\" alt=\"messenger\" style=\"margin-right:5px;\" /></a>&nbsp;\n                <a href=\"https://goo.gl/maps/kpEMXw6deUcjidot9\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/gm.png\" height=\"25\" width=\"25\" alt=\"google maps\" style=\"margin-right:5px;\" /></a>&nbsp;\n                <a href=\"https://www.youtube.com/@familijna1631/featured\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/yt.png\" height=\"25\" width=\"25\" alt=\"youtube\" style=\"margin-right:5px;\" /></a>&nbsp;\n                <a href=\"https://www.linkedin.com/company/familijna\" style=\"display:inline-block;\"><img src=\"https://www.familijna.pl/uploads/drive/in.png\" height=\"25\" width=\"25\" alt=\"linkedin\" style=\"margin-right:5px;\" /></a>&nbsp;\n            </div>\n        </td>\n    </tr>\n</table>\n\n<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"900\" style=\"width:900px;max-width:900px;font-family:Calibri, Arial;margin-top:6px;\">\n    <tr>\n        <td style=\"font-size:7pt;line-height:120%;color:#595959;\">\n            <p style=\"margin:0 0 8px 0;\"><span style=\"color:#DF292F;\">GRUPA FAMILIJNA</span> Spółka z ograniczoną odpowiedzialnością, Kuźnica Czeszycka 11, 56-320 Krośnice, tel. 71 384 56 13</p>\n            <p style=\"margin:0 0 20px 0;\">NIP: 9161351695, REGON: 020182505, BDO: 000084673.</p>\n            <p style=\"margin:0 0 8px 0;\">Informacja dla odbiorcy: Informacje zawarte w niniejszym email-u oraz załącznikach do niego mają charakter poufny, są przeznaczone wyłącznie dla wskazanych adresatów. Jeśli nie są Państwo adresatem tego email-a, prosimy niezwłocznie o jego skasowanie oraz poinformowanie nadawcy. Wykonywanie kopii, ujawnienie, dystrybucja lub używanie niniejszego email-a do innych celów jest zabronione. Spółka Grupa Familijna Sp. z o.o. nie ponosi żadnej odpowiedzialności za zmiany email-a dokonane po jego wysłaniu.</p>\n            <p style=\"margin:0;\">Administratorem danych osobowych jest Grupa Familijna sp. z o.o. z siedzibą w Kuźnicy Czeszyckiej. Dane osobowe zawarte w korespondencji mailowej są przetwarzane w celu odpowiadania na pytania, dokonywania ustaleń, zawierania i realizacji umów z kontrahentami, rozpoznawania reklamacji, jak również ustalenia, dochodzenia i obrony roszczeń. Mają Państwo w szczególności prawo dostępu do swoich danych osobowych, żądania ich usunięcia i wniesienia sprzeciwu wobec przetwarzania danych. Szczegóły dotyczące przetwarzania danych osobowych i przysługujących praw znajdują się w <a href=\"https://www.grupafamilijna.pl/pl/polityka-prywatnosci\" style=\"color:#0645AD;text-decoration:underline;\">Polityce prywatności</a>.</p>\n        </td>\n    </tr>\n</table>\n";
-
-  html = replaceAllSafe(html, "%%DisplayName%%", displayName);
-  html = replaceAllSafe(html, "%%Email%%", email);
-  html = replaceAllSafe(html, "%%Title%%", title);
-  html = replaceAllSafe(html, "%%PhoneNumber%%", phoneNumber);
-  html = replaceAllSafe(html, "%%MobileNumber%%", mobileNumber);
-  html = replaceAllSafe(html, "%%PhoneHtml%%", phoneHtml);
-  html = replaceAllSafe(html, "%%Department%%", department);
-  html = replaceAllSafe(html, "%%OfficeLocation%%", officeLocation);
-  html = replaceAllSafe(html, "%%CompanyName%%", companyName);
-
-  return '<div data-familijna-signature="1">' + html + '</div>';
-}
-
-
-async function insertSignatureManual() {
-  setButtonBusy(true);
-  setStatus("Start...", false, false);
+async function onAutoSignatureChanged() {
+  const checkbox = document.getElementById("autoSignatureEnabled");
+  const enabled = checkbox && checkbox.checked === true;
+  clearDiag();
 
   try {
-    const accessToken = await getAccessTokenWithDialog();
-    const user = await getGraphUser(accessToken);
+    logDiag("Zapisuję autoSignatureEnabled=" + enabled + "...");
+    const saved = await roamingSetAndSave(GF_AUTO_KEY, enabled);
+    logDiag("Zapis checkboxa OK: autoSignatureEnabled=" + saved);
 
-    await storageSet(STORAGE_PROFILE_KEY, JSON.stringify(user));
+    if (enabled) {
+      await ensureGraphProfile();
+      setStatus("Automatyczna stopka jest włączona.", false, true);
+    } else {
+      setStatus("Automatyczna stopka jest wyłączona.", false, true);
+    }
+  } catch (e) {
+    if (checkbox) checkbox.checked = false;
+    try { await roamingSetAndSave(GF_AUTO_KEY, false); } catch (_) {}
+    const msg = e && e.message ? e.message : String(e);
+    logDiag("Błąd: " + msg, true);
+    setStatus("Nie udało się zapisać ustawienia. Checkbox cofnięty.", true, false);
+  }
+}
 
-    const html = buildSignatureHtml(user);
+async function insertSignatureManual() {
+  clearDiag();
+  setBusy("insertSignature", true, "Wstawiam...", "Wstaw stopkę teraz");
+  setStatus("Przygotowuję stopkę...", false, false);
 
-    setStatus("Wstawiam stopkę do wiadomości...", false, false);
+  try {
+    const user = await ensureGraphProfile();
+    const html = gfBuildSignatureHtml(user, Office.context.mailbox.userProfile || {});
+    logDiag("HTML stopki przygotowany. Wstawiam do wiadomości...");
 
     Office.context.mailbox.item.body.setSelectedDataAsync(
       "<br><br>" + html,
       { coercionType: Office.CoercionType.Html },
       function (result) {
-        setButtonBusy(false);
-
+        setBusy("insertSignature", false, null, "Wstaw stopkę teraz");
         if (result.status === Office.AsyncResultStatus.Succeeded) {
+          logDiag("Stopka została wstawiona ręcznie.");
           setStatus("Stopka została wstawiona.", false, true);
         } else {
           const msg = result.error && result.error.message ? result.error.message : "Nieznany błąd Outlook API.";
-          setStatus("Nie udało się wstawić stopki: " + msg, true, false);
+          logDiag("Błąd wstawiania: " + msg, true);
+          setStatus("Nie udało się wstawić stopki.", true, false);
         }
       }
     );
   } catch (e) {
-    setButtonBusy(false);
-    const message = e && e.message ? e.message : String(e);
-    setStatus("Nie udało się pobrać danych użytkownika:\n" + message, true, false);
+    setBusy("insertSignature", false, null, "Wstaw stopkę teraz");
+    const msg = e && e.message ? e.message : String(e);
+    logDiag("Błąd: " + msg, true);
+    setStatus("Nie udało się przygotować stopki.", true, false);
   }
 }
 
+async function runDiagnostics() {
+  clearDiag();
+  setBusy("runDiagnostics", true, "Sprawdzam...", "Diagnostyka");
+  setStatus("Uruchomiono diagnostykę...", false, false);
 
-
-async function debugRoamingSettings() {
   try {
-    const settings = Office.context && Office.context.roamingSettings ? Office.context.roamingSettings : null;
+    logDiag("Wersja dodatku: 3.1.0.0");
+    logDiag("Office.js: działa");
 
-    const autoValue = settings ? settings.get(STORAGE_AUTO_KEY) : null;
-    const profileValue = settings ? settings.get(STORAGE_PROFILE_KEY) : null;
-
-    let localAuto = null;
-    let localProfile = null;
-    try {
-      if (window.localStorage) {
-        localAuto = window.localStorage.getItem(STORAGE_AUTO_KEY);
-        localProfile = window.localStorage.getItem(STORAGE_PROFILE_KEY);
-      }
-    } catch (e) {
-      localAuto = "localStorage error: " + (e && e.message ? e.message : String(e));
+    const mailboxProfile = Office.context && Office.context.mailbox ? Office.context.mailbox.userProfile : null;
+    if (mailboxProfile) {
+      logDiag("Outlook profil: " + (mailboxProfile.displayName || "brak nazwy") + " / " + (mailboxProfile.emailAddress || "brak email"));
+    } else {
+      logDiag("Outlook profil: brak danych", true);
     }
 
-    const output =
-      "WERSJA PLIKU: ROAMING ONLY 2026-05-29\n\n" +
-      "ROAMING SETTINGS - JEDYNE ZRODLO PRAWDY\n" +
-      "autoSignatureEnabled = " + autoValue + "\n" +
-      "signatureUserProfile = " + (profileValue ? String(profileValue).substring(0, 1000) : "null") + "\n\n" +
-      "LOCAL STORAGE - LEGACY, IGNOROWANE PRZEZ EVENT\n" +
-      "autoSignatureEnabled = " + localAuto + "\n" +
-      "signatureUserProfile = " + (localProfile ? String(localProfile).substring(0, 500) : "null") + "\n\n" +
-      "Jesli ROAMING SETTINGS jest null/false, automatyczna stopka nie zadziala, nawet gdy LOCAL STORAGE pokazuje true.";
+    const settings = roamingSettings();
+    logDiag("roamingSettings: " + (settings ? "dostępne" : "niedostępne"), !settings);
+    const autoValue = roamingGet(GF_AUTO_KEY);
+    const profileValue = roamingGet(GF_PROFILE_KEY);
+    logDiag("autoSignatureEnabled: " + autoValue);
 
-    const out = document.getElementById("roamingDebugOutput");
-    if (out) out.textContent = output; else alert(output);
+    const savedProfile = gfParseProfile(profileValue);
+    if (savedProfile) {
+      logDiag("Zapisany profil: " + (savedProfile.displayName || "brak nazwy") + " / " + (savedProfile.mail || savedProfile.userPrincipalName || "brak email"));
+    } else {
+      logDiag("Zapisany profil: brak lub nieczytelny");
+    }
 
-    setStatus("Diagnostyka odczytana z roamingSettings.", false, true);
+    const user = await ensureGraphProfile();
+    logDiag("Test Graph zakończony OK.");
+    logDiag("Dane do stopki: imię/nazwa=" + (user.displayName || "brak") + ", stanowisko=" + (user.jobTitle || "brak") + ", telefon=" + (gfFirstBusinessPhone(user) || "brak") + ", komórka=" + (user.mobilePhone || "brak"));
+
+    setStatus("Diagnostyka zakończona.", false, true);
   } catch (e) {
-    const out = document.getElementById("roamingDebugOutput");
-    const msg = "Blad debugRoamingSettings: " + (e && e.message ? e.message : String(e));
-    if (out) out.textContent = msg; else alert(msg);
-    setStatus(msg, true, false);
+    const msg = e && e.message ? e.message : String(e);
+    logDiag("Błąd diagnostyki: " + msg, true);
+    setStatus("Diagnostyka wykazała błąd.", true, false);
+  } finally {
+    setBusy("runDiagnostics", false, null, "Diagnostyka");
   }
 }
-
-
-window.debugRoamingSettings = debugRoamingSettings;

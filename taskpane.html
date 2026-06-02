@@ -2,38 +2,42 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>Stopka Familijna</title>
+  <title>Stopka Familijna v3.1</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-  <script src="taskpane.js?v=roaming-only-20260529"></script>
+  <script src="signature-common.js?v=3.1.0.0"></script>
+  <script src="taskpane.js?v=3.1.0.0"></script>
   <style>
-    body { font-family: Segoe UI, Arial, sans-serif; padding: 16px; margin: 0; }
-    h2 { margin-top: 0; font-size: 22px; }
-    button { width: 100%; padding: 12px; font-size: 15px; cursor: pointer; margin-top: 12px; }
+    body { font-family: Segoe UI, Arial, sans-serif; padding: 16px; margin: 0; color:#222; }
+    h2 { margin: 0 0 12px 0; font-size: 21px; }
+    .version { font-size: 12px; color:#666; margin-bottom: 14px; }
+    button { width: 100%; padding: 12px; font-size: 15px; cursor: pointer; margin-top: 10px; border:1px solid #999; border-radius:4px; background:#fff; }
+    button.primary { background:#df292f; color:white; border-color:#df292f; font-weight:600; }
     button:disabled { cursor: default; opacity: 0.6; }
-    .option { display: flex; gap: 8px; align-items: flex-start; margin: 16px 0 10px 0; font-size: 14px; line-height: 1.35; }
+    .option { display: flex; gap: 8px; align-items: flex-start; margin: 14px 0 12px 0; font-size: 14px; line-height: 1.35; }
     .option input { margin-top: 3px; }
     .hint { color: #666; font-size: 12px; margin-top: 12px; line-height: 1.4; }
-    #status { margin-top: 14px; font-size: 12px; line-height: 1.4; color: #444; white-space: pre-wrap; }
+    #status { margin-top: 14px; font-size: 12px; line-height: 1.45; color: #444; white-space: pre-wrap; }
     #status.error { color: #b00020; }
     #status.ok { color: #107c10; }
+    #diagnosticOutput { white-space:pre-wrap; background:#f7f7f7; border:1px solid #ccc; padding:10px; margin-top:10px; font-size:12px; color:#107c10; max-height:280px; overflow:auto; }
+    #diagnosticOutput.error { color:#b00020; }
   </style>
 </head>
 <body>
+  <h2>Stopka Familijna v3.1</h2>
+  <div class="version">Wersja dodatku: 3.1.0.0</div>
 
-<div style="background:red;color:white;padding:10px;font-weight:bold;text-align:center;margin-bottom:10px;">
-GF TEST 3.0.0.1 ROAMING ONLY 2026-05-29
-</div>
+  <label class="option">
+    <input type="checkbox" id="autoSignatureEnabled" />
+    <span>Dodawaj stopkę automatycznie do nowych wiadomości</span>
+  </label>
 
-  <h2>Stopka Familijna</h2>
-  <label class="option"><input type="checkbox" id="autoSignatureEnabled" /><span>Dodawaj stopkę automatycznie do nowych wiadomości</span></label>
-  <button id="insertSignature">Wstaw stopkę teraz</button>
+  <button id="insertSignature" class="primary">Wstaw stopkę teraz</button>
+  <button id="runDiagnostics">Diagnostyka</button>
 
-<button id="debugRoamingSettings" onclick="debugRoamingSettings()" style="margin-top:10px;width:100%;padding:8px;">
-  Pokaż roamingSettings
-</button>
-<pre id="roamingDebugOutput" style="white-space:pre-wrap;background:#f4f4f4;border:1px solid #ccc;padding:8px;margin-top:8px;font-size:12px;color:#222;max-height:220px;overflow:auto;"></pre>
+  <div id="diagnosticOutput">Diagnostyka pojawi się tutaj.</div>
 
-  <p class="hint">Po zaznaczeniu checkboxa dodatek zapisze dane użytkownika i będzie automatycznie dodawać stopkę przy tworzeniu wiadomości.</p>
+  <p class="hint">Po zaznaczeniu checkboxa dodatek zapisuje ustawienie i profil użytkownika w roamingSettings. Automatyczna stopka korzysta z tych zapisanych danych.</p>
   <div id="status"></div>
 </body>
 </html>
