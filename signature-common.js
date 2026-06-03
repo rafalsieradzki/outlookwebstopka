@@ -22,7 +22,7 @@ function gfFirstBusinessPhone(user) {
 
 function gfBuildPhoneLine(phoneNumber) {
   if (!phoneNumber) return "";
-  return '<span style="color:#DF292F;">tel.</span> ' + gfText(phoneNumber);
+  return gfText(phoneNumber);
 }
 
 function gfBuildMobileLine(mobileNumber) {
