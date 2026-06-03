@@ -1,3 +1,10 @@
+/* Stopka Familijna v3.1 - panel FIX 3.1.0.1 */
+var GF_VERSION = typeof GF_VERSION !== "undefined" ? GF_VERSION : "3.1.0.0";
+var GF_AUTO_KEY = typeof GF_AUTO_KEY !== "undefined" ? GF_AUTO_KEY : "autoSignatureEnabled";
+var GF_PROFILE_KEY = typeof GF_PROFILE_KEY !== "undefined" ? GF_PROFILE_KEY : "signatureUserProfile";
+var GF_MARKER = typeof GF_MARKER !== "undefined" ? GF_MARKER : 'data-familijna-signature="1"';
+var GF_GRAPH_ME_URL = typeof GF_GRAPH_ME_URL !== "undefined" ? GF_GRAPH_ME_URL : "https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,jobTitle,businessPhones,mobilePhone,department,officeLocation,companyName";
+
 /* Stopka Familijna v3.1 - panel */
 const AUTH_URL = "https://rafalsieradzki.github.io/outlookwebstopka/auth.html";
 let authDialog = null;
