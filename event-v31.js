@@ -44,7 +44,7 @@
   var phoneHtml = buildPhoneHtml(phoneNumber, mobileNumber);
 
   var tableBase = "border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;";
-  var tightLine = "line-height:10px;mso-line-height-rule:exactly;margin:0;padding:0;";
+  var tightLine = "line-height:9px;mso-line-height-rule:exactly;margin:0;padding:0;";
   var legalStyle = "font-size:8pt;line-height:10px;mso-line-height-rule:exactly;color:#595959;margin:0;padding:0;";
 
   return '<div ' + GF_MARKER + ' style="margin:0;padding:0;line-height:normal;">' +
