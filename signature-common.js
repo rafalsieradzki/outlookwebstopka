@@ -37,8 +37,8 @@ function gfBuildSignatureHtml(user, officeProfile) {
   const phoneHtml = gfBuildPhoneHtml(phoneNumber, mobileNumber);
 
   const tableBase = "border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;";
-  const tightLine = "line-height:9px;mso-line-height-rule:exactly;margin:0;padding:0;";
-  const legalStyle = "font-size:8pt;line-height:10px;mso-line-height-rule:exactly;color:#595959;margin:0;padding:0;";
+  const tightLine = "line-height:10px;mso-line-height-rule:exactly;margin:0;padding:0;";
+  const legalStyle = "font-size:8.5pt;line-height:10px;mso-line-height-rule:exactly;color:#595959;margin:0;padding:0;";
 
   return '<div ' + GF_MARKER + ' style="margin:0;padding:0;line-height:normal;">' +
     '<table cellpadding="0" cellspacing="0" border="0" style="max-width:520px;font-family:Calibri,Arial;' + tableBase + 'line-height:110%;mso-line-height-rule:exactly;margin:0;padding:0;">' +
@@ -48,7 +48,7 @@ function gfBuildSignatureHtml(user, officeProfile) {
     '</td>' +
     '<td valign="middle" style="font-size:9pt;line-height:13px;mso-line-height-rule:exactly;color:#595959;border-left:3px solid #DF292F;padding:0 0 0 15px;margin:0;">' +
     '<div style="margin:0;padding:0;font-size:14pt;line-height:18px;mso-line-height-rule:exactly;color:#DF292F;">' + gfText(displayName) + '</div>' +
-    '<div style="margin:0;padding:0;font-size:9pt;line-height:12px;mso-line-height-rule:exactly;color:#595959;">' + gfText(title) + '</div>' +
+    '<div style="margin:0;padding:0;font-size:10pt;line-height:12px;mso-line-height-rule:exactly;color:#595959;">' + gfText(title) + '</div>' +
     '<div style="margin:14px 0 0 0;padding:0;font-size:9pt;line-height:12px;mso-line-height-rule:exactly;color:#595959;">' +
     '<a href="https://familijna.pl" style="color:#595959;text-decoration:none;"><span style="color:#DF292F;">www.</span>familijna.pl</a> ' +
     '<span style="color:#DF292F;">email:</span> ' +
