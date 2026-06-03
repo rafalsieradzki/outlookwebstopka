@@ -38,7 +38,7 @@ function gfBuildSignatureHtml(user, officeProfile) {
 
   const tableBase = "border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;";
   const tightLine = "line-height:9px;mso-line-height-rule:exactly;margin:0;padding:0;";
-  const legalStyle = "font-size:6.5pt;line-height:9px;mso-line-height-rule:exactly;color:#595959;margin:0;padding:0;";
+  const legalStyle = "font-size:8pt;line-height:10px;mso-line-height-rule:exactly;color:#595959;margin:0;padding:0;";
 
   return '<div ' + GF_MARKER + ' style="margin:0;padding:0;line-height:normal;">' +
     '<table cellpadding="0" cellspacing="0" border="0" style="max-width:520px;font-family:Calibri,Arial;' + tableBase + 'line-height:110%;mso-line-height-rule:exactly;margin:0;padding:0;">' +
