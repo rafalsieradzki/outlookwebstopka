@@ -1,10 +1,12 @@
-/* Stopka Familijna v3.1 - event-based activation, bundled for classic/new Outlook */
+/* Stopka Familijna v3.1 - event-based activation, template-based, bundled for classic/new Outlook */
 (function () {
   var GF_VERSION = "3.1.0.0";
   var GF_AUTO_KEY = "autoSignatureEnabled";
   var GF_PROFILE_KEY = "signatureUserProfile";
   var GF_EVENT_LOG_KEY = "signatureEventLastLog";
   var GF_MARKER = 'data-familijna-signature="1"';
+  var GF_TEMPLATE_URL = "https://rafalsieradzki.github.io/outlookwebstopka/signature-template.html?v=3.1.2.0";
+  var GF_TEMPLATE_CACHE = null;
 
   function complete(event) {
     try {
@@ -21,65 +23,103 @@
       .replace(/\"/g, "&quot;");
   }
 
+  function replaceAll(source, search, replacement) {
+    return String(source).split(search).join(replacement === null || replacement === undefined ? "" : String(replacement));
+  }
+
   function firstBusinessPhone(user) {
     return user && user.businessPhones && user.businessPhones.length > 0 ? (user.businessPhones[0] || "") : "";
   }
 
+  function buildPhoneLine(phoneNumber) {
+    if (!phoneNumber) return "";
+    return '<span style="color:#DF292F;">tel.</span> ' + text(phoneNumber);
+  }
+
+  function buildMobileLine(mobileNumber) {
+    if (!mobileNumber) return "";
+    return '<span style="color:#DF292F;">kom.</span> ' + text(mobileNumber);
+  }
+
   function buildPhoneHtml(phoneNumber, mobileNumber) {
     var parts = [];
-    if (phoneNumber) parts.push('<span style="color:#DF292F;">tel.</span> ' + text(phoneNumber));
-    if (mobileNumber) parts.push('<span style="color:#DF292F;">kom.</span> ' + text(mobileNumber));
+    var phoneLine = buildPhoneLine(phoneNumber);
+    var mobileLine = buildMobileLine(mobileNumber);
+    if (phoneLine) parts.push(phoneLine);
+    if (mobileLine) parts.push(mobileLine);
     return parts.join(" ");
   }
 
-  function buildSignatureHtml(user, officeProfile) {
-  user = user || {};
-  officeProfile = officeProfile || {};
+  function loadTemplate(callback) {
+    if (GF_TEMPLATE_CACHE) { callback(null, GF_TEMPLATE_CACHE); return; }
 
-  var displayName = user.displayName || officeProfile.displayName || "";
-  var email = user.mail || user.userPrincipalName || officeProfile.emailAddress || "";
-  var title = user.jobTitle || "";
-  var phoneNumber = firstBusinessPhone(user);
-  var mobileNumber = user.mobilePhone || "";
-  var phoneHtml = buildPhoneHtml(phoneNumber, mobileNumber);
+    if (typeof fetch === "function") {
+      fetch(GF_TEMPLATE_URL, { cache: "no-store" })
+        .then(function (response) {
+          if (!response.ok) throw new Error("HTTP " + response.status);
+          return response.text();
+        })
+        .then(function (template) {
+          GF_TEMPLATE_CACHE = template;
+          callback(null, template);
+        })
+        .catch(function (error) {
+          loadTemplateWithXhr(callback, error);
+        });
+      return;
+    }
 
-  var tableBase = "border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;";
-  var tightLine = "line-height:9px;mso-line-height-rule:exactly;margin:0;padding:0;";
-  var legalStyle = "font-size:8pt;line-height:10px;mso-line-height-rule:exactly;color:#595959;margin:0;padding:0;";
+    loadTemplateWithXhr(callback, null);
+  }
 
-  return '<div ' + GF_MARKER + ' style="margin:0;padding:0;line-height:normal;">' +
-    '<table cellpadding="0" cellspacing="0" border="0" style="max-width:520px;font-family:Calibri,Arial;' + tableBase + 'line-height:110%;mso-line-height-rule:exactly;margin:0;padding:0;">' +
-    '<tr style="margin:0;padding:0;">' +
-    '<td style="width:220px;margin:0;padding:0 12px 0 0;line-height:0;" align="center" valign="middle">' +
-    '<img src="https://www.familijna.pl/uploads/drive/familijna_logotyp.png" width="80%" alt="GRUPA FAMILIJNA" style="display:block;border:0;outline:none;text-decoration:none;" />' +
-    '</td>' +
-    '<td valign="middle" style="font-size:9pt;line-height:13px;mso-line-height-rule:exactly;color:#595959;border-left:3px solid #DF292F;padding:0 0 0 15px;margin:0;">' +
-    '<div style="margin:0;padding:0;font-size:14pt;line-height:18px;mso-line-height-rule:exactly;color:#DF292F;">' + text(displayName) + '</div>' +
-    '<div style="margin:0;padding:0;font-size:9pt;line-height:12px;mso-line-height-rule:exactly;color:#595959;">' + text(title) + '</div>' +
-    '<div style="margin:14px 0 0 0;padding:0;font-size:9pt;line-height:12px;mso-line-height-rule:exactly;color:#595959;">' +
-    '<a href="https://familijna.pl" style="color:#595959;text-decoration:none;"><span style="color:#DF292F;">www.</span>familijna.pl</a> ' +
-    '<span style="color:#DF292F;">email:</span> ' +
-    '<a href="mailto:' + text(email) + '" style="color:#595959;text-decoration:none;">' + text(email) + '</a>' +
-    '</div>' +
-    '<div style="margin:3px 0 0 0;padding:0;font-size:9pt;line-height:12px;mso-line-height-rule:exactly;color:#595959;">' + phoneHtml + '</div>' +
-    '<div style="margin:14px 0 0 0;padding:0;line-height:25px;mso-line-height-rule:exactly;">' +
-    '<a href="https://www.facebook.com/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/fb.png" height="25" width="25" alt="facebook" style="margin-right:5px;border:0;display:inline-block;" /></a>&nbsp;' +
-    '<a href="https://www.instagram.com/familijna/" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/ig.png" height="25" width="25" alt="instagram" style="margin-right:5px;border:0;display:inline-block;" /></a>&nbsp;' +
-    '<a href="https://m.me/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/ms.png" height="25" width="25" alt="messenger" style="margin-right:5px;border:0;display:inline-block;" /></a>&nbsp;' +
-    '<a href="https://goo.gl/maps/kpEMXw6deUcjidot9" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/gm.png" height="25" width="25" alt="google maps" style="margin-right:5px;border:0;display:inline-block;" /></a>&nbsp;' +
-    '<a href="https://www.youtube.com/@familijna1631/featured" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/yt.png" height="25" width="25" alt="youtube" style="margin-right:5px;border:0;display:inline-block;" /></a>&nbsp;' +
-    '<a href="https://www.linkedin.com/company/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/in.png" height="25" width="25" alt="linkedin" style="margin-right:5px;border:0;display:inline-block;" /></a>&nbsp;' +
-    '</div></td></tr></table>' +
-    '<table cellpadding="0" cellspacing="0" border="0" width="700" style="width:700px;max-width:700px;font-family:Calibri,Arial;' + tableBase + 'margin:4px 0 0 0;padding:0;">' +
-    '<tr style="margin:0;padding:0;"><td style="' + legalStyle + '">' +
-    '<div style="' + legalStyle + '"><span style="color:#DF292F;">GRUPA FAMILIJNA</span> Spółka z ograniczoną odpowiedzialnością, Kuźnica Czeszycka 11, 56-320 Krośnice, tel. 71 384 56 13</div>' +
-    '<div style="' + legalStyle + 'margin-top:3px;">NIP: 9161351695, REGON: 020182505, BDO: 000084673.</div>' +
-    '<div style="' + legalStyle + 'margin-top:6px;">Informacja dla odbiorcy: Informacje zawarte w niniejszym email-u oraz załącznikach do niego mają charakter poufny, są przeznaczone wyłącznie dla wskazanych adresatów. Jeśli nie są Państwo adresatem tego email-a, prosimy niezwłocznie o jego skasowanie oraz poinformowanie nadawcy. Wykonywanie kopii, ujawnienie, dystrybucja lub używanie niniejszego email-a do innych celów jest zabronione. Spółka Grupa Familijna Sp. z o.o. nie ponosi żadnej odpowiedzialności za zmiany email-a dokonane po jego wysłaniu.</div>' +
-    '<div style="' + legalStyle + 'margin-top:6px;">Administratorem danych osobowych jest Grupa Familijna sp. z o.o. z siedzibą w Kuźnicy Czeszyckiej. Dane osobowe zawarte w korespondencji mailowej są przetwarzane w celu odpowiadania na pytania, dokonywania ustaleń, zawierania i realizacji umów z kontrahentami, rozpoznawania reklamacji, jak również ustalenia, dochodzenia i obrony roszczeń. Mają Państwo w szczególności prawo dostępu do swoich danych osobowych, żądania ich usunięcia i wniesienia sprzeciwu wobec przetwarzania danych. Szczegóły dotyczące przetwarzania danych osobowych i przysługujących praw znajdują się w <a href="https://www.grupafamilijna.pl/pl/polityka-prywatnosci" style="color:#0645AD;text-decoration:underline;">Polityce prywatności</a>.</div>' +
-    '</td></tr></table>' +
-    '</div>';
-}
-function parseProfile(value) {
+  function loadTemplateWithXhr(callback, originalError) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", GF_TEMPLATE_URL, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status >= 200 && xhr.status < 300) {
+          GF_TEMPLATE_CACHE = xhr.responseText;
+          callback(null, xhr.responseText);
+        } else {
+          callback(new Error("Nie udało się pobrać szablonu stopki" + (originalError ? ": " + originalError.message : ": HTTP " + xhr.status)));
+        }
+      };
+      xhr.send();
+    } catch (e) {
+      callback(e);
+    }
+  }
+
+  function buildSignatureHtml(user, officeProfile, callback) {
+    user = user || {};
+    officeProfile = officeProfile || {};
+
+    var displayName = user.displayName || officeProfile.displayName || "";
+    var email = user.mail || user.userPrincipalName || officeProfile.emailAddress || "";
+    var title = user.jobTitle || "";
+    var phoneNumber = firstBusinessPhone(user);
+    var mobileNumber = user.mobilePhone || "";
+    var phoneLine = buildPhoneLine(phoneNumber);
+    var mobileLine = buildMobileLine(mobileNumber);
+    var phoneHtml = buildPhoneHtml(phoneNumber, mobileNumber);
+
+    loadTemplate(function (error, template) {
+      if (error) { callback(error); return; }
+      var html = template;
+      html = replaceAll(html, "{{DISPLAY_NAME}}", text(displayName));
+      html = replaceAll(html, "{{JOB_TITLE}}", text(title));
+      html = replaceAll(html, "{{EMAIL}}", text(email));
+      html = replaceAll(html, "{{PHONE}}", text(phoneNumber));
+      html = replaceAll(html, "{{MOBILEPHONE}}", text(mobileNumber));
+      html = replaceAll(html, "{{PHONE_LINE}}", phoneLine);
+      html = replaceAll(html, "{{MOBILE_LINE}}", mobileLine);
+      html = replaceAll(html, "{{PHONE_HTML}}", phoneHtml);
+      callback(null, html);
+    });
+  }
+
+  function parseProfile(value) {
     if (!value) return null;
     if (typeof value === "object") return value;
     try { return JSON.parse(value); } catch (_) { return null; }
@@ -113,8 +153,14 @@ function parseProfile(value) {
   }
 
   function insertHtml(html, done) {
-    // Uzywamy prependAsync zamiast setSignatureAsync, bo new Outlook/Web potrafi rozszerzac odstepy w podpisie.
-    // Dla nowej, pustej wiadomosci daje to taki sam efekt wizualny jak reczne wstawienie HTML.
+    var body = Office.context.mailbox.item.body;
+    if (body && typeof body.setSignatureAsync === "function") {
+      body.setSignatureAsync(html, { coercionType: Office.CoercionType.Html }, function (result) {
+        if (result.status === Office.AsyncResultStatus.Succeeded) { done("setSignatureAsync OK"); return; }
+        fallbackInsert(html, done);
+      });
+      return;
+    }
     fallbackInsert(html, done);
   }
 
@@ -156,10 +202,16 @@ function parseProfile(value) {
         }
 
         var officeProfile = (Office.context && Office.context.mailbox && Office.context.mailbox.userProfile) ? Office.context.mailbox.userProfile : {};
-        var html = buildSignatureHtml(profile, officeProfile);
-        insertHtml(html, function (insertStatus) {
-          writeEventLog("signature inserted: " + insertStatus);
-          complete(event);
+        buildSignatureHtml(profile, officeProfile, function (error, html) {
+          if (error) {
+            writeEventLog("template error: " + (error && error.message ? error.message : String(error)));
+            complete(event);
+            return;
+          }
+          insertHtml(html, function (insertStatus) {
+            writeEventLog("signature inserted: " + insertStatus);
+            complete(event);
+          });
         });
       });
     } catch (e) {
