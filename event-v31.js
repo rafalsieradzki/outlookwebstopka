@@ -1,9 +1,8 @@
-/* Stopka Familijna v3.1 - wspolne stale i generator HTML */
+/* Stopka Familijna v3.1 - event-v31.js, wersja 3.1.0.3 */
 const GF_VERSION = "3.1.0.0";
 const GF_AUTO_KEY = "autoSignatureEnabled";
 const GF_PROFILE_KEY = "signatureUserProfile";
 const GF_MARKER = 'data-familijna-signature="1"';
-const GF_GRAPH_ME_URL = "https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,jobTitle,businessPhones,mobilePhone,department,officeLocation,companyName";
 
 function gfText(value) {
   if (value === null || value === undefined) return "";
@@ -73,8 +72,6 @@ function gfParseProfile(value) {
   try { return JSON.parse(value); } catch (e) { return null; }
 }
 
-
-/* Stopka Familijna v3.1 - event-based activation */
 function gfComplete(event) {
   try {
     if (event && typeof event.completed === "function") event.completed();
@@ -90,21 +87,21 @@ function gfGetRoaming(key) {
   }
 }
 
-function gfBodyContainsMarker(callback) {
+function gfBodyGetHtml(callback) {
   try {
     Office.context.mailbox.item.body.getAsync(Office.CoercionType.Html, function (result) {
       if (result.status !== Office.AsyncResultStatus.Succeeded) {
-        callback(false);
+        callback("");
         return;
       }
-      callback(String(result.value || "").indexOf(GF_MARKER) >= 0);
+      callback(String(result.value || ""));
     });
   } catch (e) {
-    callback(false);
+    callback("");
   }
 }
 
-function gfInsertSignature(html, done) {
+function gfInsertHtml(html, done) {
   const body = Office.context.mailbox.item.body;
 
   if (body && typeof body.setSignatureAsync === "function") {
@@ -132,28 +129,37 @@ function gfFallbackInsert(html, done) {
   body.setSelectedDataAsync("<br><br>" + html, { coercionType: Office.CoercionType.Html }, function () { done(); });
 }
 
+function gfEventMessage(message) {
+  return '<div style="font-family:Segoe UI,Arial,sans-serif;font-size:12px;color:#b00020;border:1px solid #b00020;padding:6px;margin:6px 0;">Stopka Familijna v3.1: ' + gfText(message) + '</div>';
+}
+
 function onNewMessageComposeHandlerV31(event) {
   try {
     const enabled = gfGetRoaming(GF_AUTO_KEY);
+
     if (!(enabled === true || enabled === "true")) {
       gfComplete(event);
       return;
     }
 
-    const profile = gfParseProfile(gfGetRoaming(GF_PROFILE_KEY));
+    const profileRaw = gfGetRoaming(GF_PROFILE_KEY);
+    const profile = gfParseProfile(profileRaw);
+
     if (!profile) {
-      gfComplete(event);
+      gfInsertHtml(gfEventMessage("automatyczna stopka jest wlaczona, ale brak zapisanego profilu. Otworz panel dodatku i uruchom Diagnostyke."), function () {
+        gfComplete(event);
+      });
       return;
     }
 
-    gfBodyContainsMarker(function (exists) {
-      if (exists) {
+    gfBodyGetHtml(function (bodyHtml) {
+      if (bodyHtml.indexOf(GF_MARKER) >= 0) {
         gfComplete(event);
         return;
       }
 
       const html = gfBuildSignatureHtml(profile, Office.context.mailbox.userProfile || {});
-      gfInsertSignature(html, function () { gfComplete(event); });
+      gfInsertHtml(html, function () { gfComplete(event); });
     });
   } catch (e) {
     gfComplete(event);
