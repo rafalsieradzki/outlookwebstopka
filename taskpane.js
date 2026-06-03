@@ -188,7 +188,7 @@ async function insertSignatureManual() {
 
   try {
     const user = await ensureGraphProfile();
-    const html = gfBuildSignatureHtml(user, Office.context.mailbox.userProfile || {});
+    const html = await gfBuildSignatureHtml(user, Office.context.mailbox.userProfile || {});
     logDiag("HTML stopki przygotowany. Wstawiam do wiadomości...");
 
     Office.context.mailbox.item.body.setSelectedDataAsync(
