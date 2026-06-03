@@ -234,7 +234,9 @@ async function runDiagnostics() {
     logDiag("roamingSettings: " + (settings ? "dostępne" : "niedostępne"), !settings);
     const autoValue = roamingGet(GF_AUTO_KEY);
     const profileValue = roamingGet(GF_PROFILE_KEY);
+    const eventLog = roamingGet("signatureEventLastLog");
     logDiag("autoSignatureEnabled: " + autoValue);
+    logDiag("ostatni event: " + (eventLog || "brak zapisu"));
 
     const savedProfile = gfParseProfile(profileValue);
     if (savedProfile) {
