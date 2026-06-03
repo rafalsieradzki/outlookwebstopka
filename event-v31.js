@@ -33,7 +33,7 @@
 
   function buildPhoneLine(phoneNumber) {
     if (!phoneNumber) return "";
-    return '<span style="color:#DF292F;">tel.</span> ' + text(phoneNumber);
+    return text(phoneNumber);
   }
 
   function buildMobileLine(mobileNumber) {
