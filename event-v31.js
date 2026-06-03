@@ -55,7 +55,7 @@
     '</td>' +
     '<td valign="middle" style="font-size:9pt;line-height:13px;mso-line-height-rule:exactly;color:#595959;border-left:3px solid #DF292F;padding:0 0 0 15px;margin:0;">' +
     '<div style="margin:0;padding:0;font-size:14pt;line-height:18px;mso-line-height-rule:exactly;color:#DF292F;">' + text(displayName) + '</div>' +
-    '<div style="margin:0;padding:0;font-size:10pt;line-height:12px;mso-line-height-rule:exactly;color:#595959;">' + text(title) + '</div>' +
+    '<div style="margin:0;padding:0;font-size:9pt;line-height:12px;mso-line-height-rule:exactly;color:#595959;">' + text(title) + '</div>' +
     '<div style="margin:14px 0 0 0;padding:0;font-size:9pt;line-height:12px;mso-line-height-rule:exactly;color:#595959;">' +
     '<a href="https://familijna.pl" style="color:#595959;text-decoration:none;"><span style="color:#DF292F;">www.</span>familijna.pl</a> ' +
     '<span style="color:#DF292F;">email:</span> ' +
