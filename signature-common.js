@@ -37,12 +37,12 @@ function gfBuildSignatureHtml(user, officeProfile) {
   const phoneHtml = gfBuildPhoneHtml(phoneNumber, mobileNumber);
 
   return '<div ' + GF_MARKER + '>' +
-    '<table cellpadding="0" cellspacing="0" border="0" style="max-width:520px;font-family:Calibri, Arial;">' +
+    '<table cellpadding="0" cellspacing="0" border="0" style="max-width:520px;font-family:Calibri,Arial;border-collapse:collapse;line-height:120%;mso-line-height-rule:exactly;">' +
     '<tr>' +
     '<td style="margin:auto;width:220px;" align="center">' +
     '<img src="https://www.familijna.pl/uploads/drive/familijna_logotyp.png" width="80%" alt="GRUPA FAMILIJNA" />' +
     '</td>' +
-    '<td style="font-size:9pt;line-height:140%;color:#595959;border-left:3px solid #DF292F;padding-left:15px;">' +
+    '<td style="font-size:9pt;line-height:115%;mso-line-height-rule:exactly;color:#595959;border-left:3px solid #DF292F;padding-left:15px;">' +
     '<span style="font-size:14pt;color:#DF292F;">' + gfText(displayName) + '</span><br />' +
     '<span>' + gfText(title) + '</span><br /><br />' +
     '<a href="https://familijna.pl" style="color:#595959;text-decoration:none;"><span style="color:#DF292F;">www.</span>familijna.pl</a> ' +
@@ -58,11 +58,11 @@ function gfBuildSignatureHtml(user, officeProfile) {
     '<a href="https://www.linkedin.com/company/familijna" style="display:inline-block;"><img src="https://www.familijna.pl/uploads/drive/in.png" height="25" width="25" alt="linkedin" style="margin-right:5px;" /></a>&nbsp;' +
     '</div></td></tr></table>' +
     '<table cellpadding="0" cellspacing="0" border="0" width="900" style="width:900px;max-width:900px;font-family:Calibri, Arial;margin-top:6px;">' +
-    '<tr><td style="font-size:7pt;line-height:120%;color:#595959;">' +
-    '<p style="margin:0 0 8px 0;"><span style="color:#DF292F;">GRUPA FAMILIJNA</span> Spółka z ograniczoną odpowiedzialnością, Kuźnica Czeszycka 11, 56-320 Krośnice, tel. 71 384 56 13</p>' +
-    '<p style="margin:0 0 20px 0;">NIP: 9161351695, REGON: 020182505, BDO: 000084673.</p>' +
-    '<p style="margin:0 0 8px 0;">Informacja dla odbiorcy: Informacje zawarte w niniejszym email-u oraz załącznikach do niego mają charakter poufny, są przeznaczone wyłącznie dla wskazanych adresatów. Jeśli nie są Państwo adresatem tego email-a, prosimy niezwłocznie o jego skasowanie oraz poinformowanie nadawcy. Wykonywanie kopii, ujawnienie, dystrybucja lub używanie niniejszego email-a do innych celów jest zabronione. Spółka Grupa Familijna Sp. z o.o. nie ponosi żadnej odpowiedzialności za zmiany email-a dokonane po jego wysłaniu.</p>' +
-    '<p style="margin:0;">Administratorem danych osobowych jest Grupa Familijna sp. z o.o. z siedzibą w Kuźnicy Czeszyckiej. Dane osobowe zawarte w korespondencji mailowej są przetwarzane w celu odpowiadania na pytania, dokonywania ustaleń, zawierania i realizacji umów z kontrahentami, rozpoznawania reklamacji, jak również ustalenia, dochodzenia i obrony roszczeń. Mają Państwo w szczególności prawo dostępu do swoich danych osobowych, żądania ich usunięcia i wniesienia sprzeciwu wobec przetwarzania danych. Szczegóły dotyczące przetwarzania danych osobowych i przysługujących praw znajdują się w <a href="https://www.grupafamilijna.pl/pl/polityka-prywatnosci" style="color:#0645AD;text-decoration:underline;">Polityce prywatności</a>.</p>' +
+    '<tr><td style="font-size:7pt;line-height:110%;mso-line-height-rule:exactly;color:#595959;padding:0;margin:0;padding:0;line-height:120%;mso-line-height-rule:exactly;">' +
+    '<p style="margin:0;padding:0;line-height:120%;mso-line-height-rule:exactly;"><span style="color:#DF292F;">GRUPA FAMILIJNA</span> Spółka z ograniczoną odpowiedzialnością, Kuźnica Czeszycka 11, 56-320 Krośnice, tel. 71 384 56 13</p>' +
+    '<p style="margin:0;padding:0;line-height:120%;mso-line-height-rule:exactly;">NIP: 9161351695, REGON: 020182505, BDO: 000084673.</p>' +
+    '<p style="margin:0;padding:0;line-height:120%;mso-line-height-rule:exactly;">Informacja dla odbiorcy: Informacje zawarte w niniejszym email-u oraz załącznikach do niego mają charakter poufny, są przeznaczone wyłącznie dla wskazanych adresatów. Jeśli nie są Państwo adresatem tego email-a, prosimy niezwłocznie o jego skasowanie oraz poinformowanie nadawcy. Wykonywanie kopii, ujawnienie, dystrybucja lub używanie niniejszego email-a do innych celów jest zabronione. Spółka Grupa Familijna Sp. z o.o. nie ponosi żadnej odpowiedzialności za zmiany email-a dokonane po jego wysłaniu.</p>' +
+    '<p style="margin:0;padding:0;line-height:120%;mso-line-height-rule:exactly;">Administratorem danych osobowych jest Grupa Familijna sp. z o.o. z siedzibą w Kuźnicy Czeszyckiej. Dane osobowe zawarte w korespondencji mailowej są przetwarzane w celu odpowiadania na pytania, dokonywania ustaleń, zawierania i realizacji umów z kontrahentami, rozpoznawania reklamacji, jak również ustalenia, dochodzenia i obrony roszczeń. Mają Państwo w szczególności prawo dostępu do swoich danych osobowych, żądania ich usunięcia i wniesienia sprzeciwu wobec przetwarzania danych. Szczegóły dotyczące przetwarzania danych osobowych i przysługujących praw znajdują się w <a href="https://www.grupafamilijna.pl/pl/polityka-prywatnosci" style="color:#0645AD;text-decoration:underline;">Polityce prywatności</a>.</p>' +
     '</td></tr></table>' +
     '</div>';
 }
